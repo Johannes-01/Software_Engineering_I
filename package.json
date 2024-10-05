@@ -1,0 +1,15 @@
+{
+  "name": "software_engineering_i",
+  "version": "1.0.0",
+  "description": "This is a university project to display modern workflow in software engineering",
+  "main": "index.js",
+  "scripts": {
+    "i": "cd project_micheal_angelo && npm i",
+    "supabase": "cd supabase && npx supabase start",
+    "dev": "cd project_micheal_angelo && npm run dev",
+    "status": "cd supabase && npx supabase status"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
