@@ -1,0 +1,20 @@
+name: Build and create artifact on tag
+on:
+    push: 
+        tags: []
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install dependencies
+        run: npm install
+      - name: Build   
+        run: npm run build
+      - name: Create artifact
+        uses: actions/upload-artifact@v3
+
+        with:
+            name: michael-angelo-${{ github.ref_name }}
+            path: out
