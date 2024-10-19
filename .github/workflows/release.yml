@@ -8,6 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Print working directory
+        run: "echo Working directory: $(pwd)"
       - name: Install dependencies
         run: npm install
       - name: Build   
