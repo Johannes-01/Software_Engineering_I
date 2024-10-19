@@ -10,6 +10,8 @@ jobs:
       - uses: actions/checkout@v3
       - name: Print working directory
         run: "echo Working directory: $(pwd)"
+      - name: "Change directory to project folder"
+        run: cd project_micheal_angelo
       - name: Install dependencies
         run: npm install
       - name: Build   
