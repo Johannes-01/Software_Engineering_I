@@ -11,7 +11,7 @@ jobs:
         steps: 
           - uses: actions/checkout@v3
             with:
-              path: project_micheal_angelo  
+              sparse-checkout: ./project_micheal_angelo
           - name: Install dependencies
             run: npm install
           - name: Build   

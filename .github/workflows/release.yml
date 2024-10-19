@@ -9,7 +9,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-            path: project_micheal_angelo
+            sparse-checkout: ./project_micheal_angelo
       - name: Print working directory
         run: "echo Working directory: $(pwd)"
       - name: Install dependencies
