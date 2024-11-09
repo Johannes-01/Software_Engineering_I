@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Inter } from 'next/font/google';
-import { Button } from "@/components/ui/button";
+import { Button } from "../components/button";
 
 const inter = Inter({ subsets: ['latin'] });
 

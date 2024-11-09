@@ -44,8 +44,9 @@ export async function middleware(request: NextRequest) {
     }
 
     if (
-        currentPath.startsWith("/login")
-        && currentPath.startsWith("/register")
+        user &&
+        (currentPath.startsWith("/login")
+        || currentPath.startsWith("/register"))
     ) {
         const url = request.nextUrl.clone();
         url.pathname = "/gallery";
