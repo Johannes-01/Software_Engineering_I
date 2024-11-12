@@ -1,1 +1,5 @@
+# Supabase
+.branches
+.temp
+.env
 node_modules

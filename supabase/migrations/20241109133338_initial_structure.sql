@@ -20,7 +20,7 @@ create table "public"."image" (
     "width" bigint not null,
     "price" bigint not null,
     "notice" text,
-    "image_id" uuid default gen_random_uuid()
+    "image_path" text not null
 );
 
 
