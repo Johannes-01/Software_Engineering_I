@@ -4,11 +4,10 @@
   "description": "This is a university project to display modern workflow in software engineering",
   "main": "index.js",
   "scripts": {
-    "setup": "npm run supabase && npm run seed-images",
     "i": "npm run install-application && npm run install-database",
     "install-application": "cd project_micheal_angelo && npm i",
     "install-database": "cd supabase && npm i",
-    "supabase": "npx supabase@latest start",
+    "supabase": "npx supabase@latest start && npm run seed-images",
     "dev": "cd project_micheal_angelo && npm run dev",
     "seed-images": "cd supabase && node seed-images.js"
   },

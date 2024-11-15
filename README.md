@@ -102,6 +102,7 @@ Hier werden die Bilder gespeichert
 **Starten von der Applikation in Local**
 - Docker sollte laufen.
 - auf die Root Ebene des Projektes navigieren
-- ```npm run dev``` ausführen um das Frontend zu starten und das BFF
+- ```npm run i``` um alle Dependencies zu installieren
 - ```npm run supabase``` ausführen um das Backend zu starten.
+- ```npm run dev``` um den NextJS Dev-Server zu starten.
 - als Nutzer user1@example.com mit dem Passwort asdfasdf anmelden
