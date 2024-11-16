@@ -1,7 +1,7 @@
 {
   "name": "supabase",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "seed-images.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "description": "",
-  "devDependencies": {
-    "supabase": "^1.207.9"
+  "dependencies": {
+    "@supabase/supabase-js": "^2.46.1"
   }
 }
