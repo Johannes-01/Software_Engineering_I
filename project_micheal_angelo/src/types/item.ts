@@ -1,4 +1,4 @@
-import { Category } from "@/types/category";
+import { Category } from "./category";
 
 export interface Item {
     category: Category;

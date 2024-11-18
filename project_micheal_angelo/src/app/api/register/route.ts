@@ -24,12 +24,10 @@ export async function POST(req: Request) {
     const {
         error,
         data,
-    } = await supabase.auth.signUp(
-        {
+    } = await supabase.auth.signUp({
             email,
             password,
-        },
-    );
+        });
 
     if (error) {
         // todo: if email no yet confirmed tell the fe and give user message

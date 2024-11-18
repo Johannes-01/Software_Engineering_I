@@ -2,6 +2,7 @@ import * as React from "react"
 
 import { cn } from "@utils/tailwind-merge-styles"
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface InputProps
     //eslint-disable @typescript-eslint/no-empty-object-type
     extends React.InputHTMLAttributes<HTMLInputElement> {
