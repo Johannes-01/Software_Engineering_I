@@ -1,15 +1,14 @@
 import { Category } from "./category";
 
 export interface Item {
-    category: Category;
+    category_id: Category;
     title: string;
     artist: string;
-    artistId: number;
-    sheetWidth: number;
-    sheetHeight: number;
-    imageWidth: number;
-    imageHeight: number;
+    width: number;
+    height: number;
+    motive_width?: number;
+    motive_height?: number;
     price: number;
-    note: string;
-    imageUrl: string;
+    notice: string;
+    image?: File | undefined;
 }
