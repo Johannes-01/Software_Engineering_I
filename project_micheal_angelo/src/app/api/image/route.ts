@@ -82,6 +82,7 @@ export async function POST(req: NextRequest) {
   //#endregion
 
   const imageId = uuidv4();
+  const image_path = `${imageId}.${createImageRequest.image.type}`;
 
   const { data, error } = await supabase
     .from("image")
@@ -96,7 +97,7 @@ export async function POST(req: NextRequest) {
         width: createImageRequest.width,
         price: createImageRequest.price,
         notice: createImageRequest.notice ?? null,
-        image_path: imageId,
+        image_path: image_path,
       },
     ])
     .select();
@@ -114,7 +115,7 @@ export async function POST(req: NextRequest) {
 
   const { error: storageError } = await supabase.storage
     .from("images")
-    .upload(imageId, createImageRequest.image, {
+    .upload(image_path, createImageRequest.image, {
       cacheControl: '3600',
       upsert: false,
     });

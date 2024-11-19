@@ -29,6 +29,7 @@ import {
 import { cn } from "@utils/tailwind-merge-styles";
 import { Item } from '../types/item'
 import { Category } from '../types/category'
+import { fromDoubleWithTwoDecimalInt } from '../utils/numberExtension'
 
 // todo free text or artist table?
 const artists = [
@@ -84,10 +85,14 @@ export default function ArtworkUpload() {
       return;
     }
 
+    formData.price = fromDoubleWithTwoDecimalInt(formData.price);
+    formData.height = fromDoubleWithTwoDecimalInt(formData.height);
+    formData.width = fromDoubleWithTwoDecimalInt(formData.width);
+
     // todo do we need to have both? --> simon?
     formData.motive_height = formData.height;
     formData.motive_width = formData.width;
-    
+
     fetch('/api/image', {
       method: 'POST',
       body: JSON.stringify(formData),
