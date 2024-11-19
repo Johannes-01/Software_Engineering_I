@@ -2,6 +2,7 @@ import { createClient } from "@utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import { Item } from "../../../types/item";
+import mime from 'mime-types';
 
 export async function POST(req: NextRequest) {
   const createImageRequest = (await req.json()) as Item;
@@ -80,9 +81,17 @@ export async function POST(req: NextRequest) {
     });
   }
   //#endregion
+  // Error while uploading the image to the storage: {"statusCode":"415","error":"invalid_mime_type","message":"mime type undefined is not supported"}
+  //get image type from createImageRequest.path (e.g. './thai_monk_kicking_police.jpg')
+  console.log(JSON.stringify(createImageRequest.image));
+  let mimeType = mime.lookup(createImageRequest.image.name);
+  console.log(mimeType);
+  if(!mimeType)
+  {
+     mimeType = "image/*";
+  }
 
   const imageId = uuidv4();
-  const image_path = `${imageId}.${createImageRequest.image.type}`;
 
   const { data, error } = await supabase
     .from("image")
@@ -97,7 +106,7 @@ export async function POST(req: NextRequest) {
         width: createImageRequest.width,
         price: createImageRequest.price,
         notice: createImageRequest.notice ?? null,
-        image_path: image_path,
+        image_path: imageId,
       },
     ])
     .select();
@@ -115,10 +124,10 @@ export async function POST(req: NextRequest) {
 
   const { error: storageError } = await supabase.storage
     .from("images")
-    .upload(image_path, createImageRequest.image, {
+    .upload(imageId, createImageRequest.image, {
       cacheControl: '3600',
       upsert: false,
-      contentType: createImageRequest.image.type,
+      contentType: mimeType,
     });
 
   if (storageError) {
