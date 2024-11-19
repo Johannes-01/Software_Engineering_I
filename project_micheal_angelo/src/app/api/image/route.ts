@@ -1,23 +1,11 @@
 import { createClient } from "@utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
-import { decode } from "base64-arraybuffer";
 import { v4 as uuidv4 } from "uuid";
-
-interface PostImageRequest {
-  category_id: number;
-  title: string;
-  artist: string;
-  motive_height: number;
-  motive_width: number;
-  height: number;
-  width: number;
-  price: number;
-  notice?: string;
-  image_path: string;
-}
+import { Item } from "../../../types/item";
 
 export async function POST(req: NextRequest) {
-  const createImageRequest = (await req.json()) as PostImageRequest;
+  const createImageRequest = (await req.json()) as Item;
+  console.log(createImageRequest);
   const supabase = await createClient();
   const user = await supabase.auth.getUser();
 
@@ -86,23 +74,14 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  if (!createImageRequest.image_path) {
-    return new NextResponse(`\"image_path\" has to be set in the body`, {
-      status: 400,
-    });
-  }
-
-  if (!isBase64Image(createImageRequest.image_path)) {
-    return new NextResponse(`\"image_path\" has to be a base64 string`, {
+  if (!createImageRequest.image) {
+    return new NextResponse(`\"image\" has to be set in the body`, {
       status: 400,
     });
   }
   //#endregion
 
   const imageId = uuidv4();
-  const base64 = createImageRequest.image_path;
-  createImageRequest.image_path = `${imageId}.${base64.split("data:image/")[1]?.split(";")[0]}`;
-  console.log(createImageRequest);
 
   const { data, error } = await supabase
     .from("image")
@@ -117,7 +96,7 @@ export async function POST(req: NextRequest) {
         width: createImageRequest.width,
         price: createImageRequest.price,
         notice: createImageRequest.notice ?? null,
-        image_path: createImageRequest.image_path,
+        image_path: imageId,
       },
     ])
     .select();
@@ -135,7 +114,10 @@ export async function POST(req: NextRequest) {
 
   const { error: storageError } = await supabase.storage
     .from("images")
-    .upload(`${imageId}.${base64.split("data:image/")[1]?.split(";")[0]}`, decode(base64));
+    .upload(imageId, createImageRequest.image, {
+      cacheControl: '3600',
+      upsert: false,
+    });
 
   if (storageError) {
     return new NextResponse(
@@ -151,34 +133,4 @@ export async function POST(req: NextRequest) {
   return new NextResponse(`${JSON.stringify(data)}`, {
     status: 200,
   });
-}
-
-function isBase64Image(str: string): boolean {
-  // Check if the string starts with data:image/ prefix
-  if (!str.startsWith("data:image/")) {
-    return false;
-  }
-
-  const allowedMimeTypes: string[] = ["jpeg", "png", "gif", "svg", "webp"];
-  const mimeType = str.split("data:image/")[1]?.split(";")[0];
-  if (!allowedMimeTypes.includes(mimeType)) {
-    return false;
-  }
-
-  // Check if it's properly formatted with base64 indicator
-  if (!str.includes(";base64,")) {
-    return false;
-  }
-
-  try {
-    // Get the base64 content after the comma
-    const base64Content = str.split(";base64,")[1];
-
-    // Try to decode it - if it fails, it's not valid base64
-    atob(base64Content);
-
-    return true;
-  } catch {
-    return false;
-  }
 }

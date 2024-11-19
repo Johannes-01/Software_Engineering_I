@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { Check, ChevronsUpDown, Upload, X } from 'lucide-react'
+import { Check, ChevronsUpDown, Upload } from 'lucide-react'
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Label } from "./ui/label"
@@ -27,8 +27,10 @@ import {
   PopoverTrigger,
 } from "./ui/popover"
 import { cn } from "@utils/tailwind-merge-styles";
-import Image from 'next/image'
+import { Item } from '../types/item'
+import { Category } from '../types/category'
 
+// todo free text or artist table?
 const artists = [
   "Pablo Picasso",
   "Vincent van Gogh",
@@ -38,34 +40,23 @@ const artists = [
 ]
 
 export default function ArtworkUpload() {
-  const [file, setFile] = useState<File | null>(null)
 
-  /*
-    category_id: number;
-  title: string;
-  artist_id: string;
-  motive_height: number;
-  motive_width: number;
-  height: number;
-  width: number;
-  price: number;
-  notice?: string;
-  image_id: string;
-  image_type: string;
-  */
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Item>({
     title: '',
-    description: '',
+    notice: '',
     artist: '',
-    width: '',
-    height: '',
-    price: '',
-    category: ''
-  })
-  const [open, setOpen] = useState(false)
+    width: 0,
+    height: 0,
+    price: 0,
+    category_id: Category.original,
+  });
+
+  const [artistsOpen, setArtistsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | undefined>(undefined);
 
   const onDrop = (acceptedFiles: File[]) => {
-    setFile(acceptedFiles[0])
+    setFormData(prev => ({ ...prev, image: acceptedFiles[0]}))
   }
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: {'image/*': []} })
@@ -79,14 +70,24 @@ export default function ArtworkUpload() {
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
+  const handleSelectCategory = (category: Category) => {
+    setFormData(prev => ({ ...prev, category_id: category}))
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
+    setError("");
+    setLoading(true);
     
-    if (!file) {
-      // todo handle error (e.g., show error message --> no artwork uploaded)
+    if (!formData.image) {
+      setError("Please upload an artwork");
       return;
     }
 
+    // todo do we need to have both? --> simon?
+    formData.motive_height = formData.height;
+    formData.motive_width = formData.width;
+    
     fetch('/api/image', {
       method: 'POST',
       body: JSON.stringify(formData),
@@ -94,24 +95,19 @@ export default function ArtworkUpload() {
     .then(response => response.json())
     .then(data => {
       console.log('Success:', data);
+      setLoading(false);
       // todo handle success (e.g., redirect or show success message)
     })
-    .catch((error) => {
-      console.error('Error:', error);
-      // todo handle error (e.g., show error message)
+    .catch(() => {
+      setError('Failed to upload artwork. Please try again.');
+      setLoading(false);
     });
-    
   }
 
   return (
     <div className="flex flex-col h-screen bg-background">
-      <div className="flex justify-end p-4">
-        <Button variant="ghost" size="icon">
-          <X className="h-6 w-6" />
-        </Button>
-      </div>
       <div className="flex flex-col md:flex-row flex-grow p-6 gap-6">
-        <div className="w-full md:w-1/2 flex flex-col">
+      <div className="w-full md:w-1/2 flex flex-col">
           <div
             {...getRootProps()}
             className={`flex items-center justify-center w-full h-full border-2 border-dashed rounded-lg cursor-pointer ${
@@ -119,9 +115,9 @@ export default function ArtworkUpload() {
             }`}
           >
             <input {...getInputProps()} />
-            {file ? (
-              <Image
-                src={URL.createObjectURL(file)}
+            {formData.image ? (
+              <img
+                src={URL.createObjectURL(formData.image)}
                 alt="Uploaded artwork"
                 className="max-w-full max-h-full object-contain"
               />
@@ -148,23 +144,23 @@ export default function ArtworkUpload() {
               />
             </div>
             <div>
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="notice">Description</Label>
               <Textarea
-                id="description"
-                name="description"
-                value={formData.description}
+                id="notice"
+                name="notice"
+                value={formData.notice}
                 onChange={handleInputChange}
                 required
               />
             </div>
             <div>
               <Label htmlFor="artist">Artist</Label>
-              <Popover open={open} onOpenChange={setOpen}>
+              <Popover open={artistsOpen} onOpenChange={setArtistsOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     role="combobox"
-                    aria-expanded={open}
+                    aria-expanded={artistsOpen}
                     className="w-full justify-between"
                   >
                     {formData.artist || "Select artist..."}
@@ -181,7 +177,7 @@ export default function ArtworkUpload() {
                           key={artist}
                           onSelect={() => {
                             handleSelectChange('artist', artist)
-                            setOpen(false)
+                            setArtistsOpen(false)
                           }}
                         >
                           <Check
@@ -234,20 +230,44 @@ export default function ArtworkUpload() {
               />
             </div>
             <div>
-              <Label htmlFor="category">Category</Label>
-              <Select onValueChange={(value : string)=> handleSelectChange('category', value)} value={formData.category}>
+              <Label htmlFor="category_id">Category</Label>
+              <Select onValueChange={(value: string) => handleSelectCategory(value as unknown as Category)} value={formData.category_id.toString()}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="painting">Painting</SelectItem>
-                  <SelectItem value="sculpture">Sculpture</SelectItem>
-                  <SelectItem value="photography">Photography</SelectItem>
-                  <SelectItem value="digital">Digital Art</SelectItem>
+                  <SelectItem value={Category.original.toString()}>Original</SelectItem>
+                  <SelectItem value={Category.replica.toString()}>Reproduktion</SelectItem>
+                  <SelectItem value={Category.grafic.toString()}>Grafik</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <Button type="submit" className="w-full">Create Artwork</Button>
+            {error && (
+              <p className='text-[red] text-center'>
+                {error}
+              </p>
+            )}
+            {loading ? (
+              <div className='flex justify-center items-center'>
+                {/*todo find beter spinner*/}
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className={cn("animate-spin")}
+                  >
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                </svg>              
+              </div>
+            ) : (
+              <Button type="submit" className="w-full">Create Artwork</Button>
+            )}
           </form>
         </div>
       </div>

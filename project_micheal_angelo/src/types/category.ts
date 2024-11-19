@@ -1,4 +1,5 @@
-export interface Category {
-    value: string;
-    id: number;
-}
+export enum Category {
+    "original" = 1,
+    "replica" = 2,
+    "grafic" = 3, 
+};
