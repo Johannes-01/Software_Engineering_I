@@ -85,17 +85,18 @@ export default function ArtworkUpload() {
       return;
     }
 
-    formData.price = fromDoubleWithTwoDecimalInt(formData.price);
-    formData.height = fromDoubleWithTwoDecimalInt(formData.height);
-    formData.width = fromDoubleWithTwoDecimalInt(formData.width);
-
+    const request = formData;
+    request.price = fromDoubleWithTwoDecimalInt(formData.price);
+    request.height = fromDoubleWithTwoDecimalInt(formData.height);
+    request.width = fromDoubleWithTwoDecimalInt(formData.width);
+    
     // todo do we need to have both? --> simon?
-    formData.motive_height = formData.height;
-    formData.motive_width = formData.width;
+    request.motive_height = formData.height;
+    request.motive_width = formData.width;
 
     fetch('/api/image', {
       method: 'POST',
-      body: JSON.stringify(formData),
+      body: JSON.stringify(request),
     })
     .then(response => response.json())
     .then(data => {

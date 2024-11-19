@@ -118,6 +118,7 @@ export async function POST(req: NextRequest) {
     .upload(image_path, createImageRequest.image, {
       cacheControl: '3600',
       upsert: false,
+      contentType: createImageRequest.image.type,
     });
 
   if (storageError) {
