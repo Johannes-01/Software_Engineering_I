@@ -17,5 +17,8 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.46.1",
     "setup": "^0.0.3"
+  },
+  "devDependencies": {
+    "@types/mime-types": "^2.1.4"
   }
 }
