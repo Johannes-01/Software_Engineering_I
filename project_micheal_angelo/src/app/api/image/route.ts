@@ -9,7 +9,6 @@ export async function POST(req: NextRequest) {
     mimeType: string,
   };
 
-  console.log(createImageRequest);
   const supabase = await createClient();
   const user = await supabase.auth.getUser();
 
@@ -122,9 +121,12 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const bytes = await createImageRequest.item.image.arrayBuffer();
+  const buffer = Buffer.from(bytes);
+
   const { error: storageError } = await supabase.storage
     .from("images")
-    .upload(imageId, createImageRequest.item.image, {
+    .upload(imageId, buffer, {
       cacheControl: '3600',
       upsert: false,
       contentType: createImageRequest.mimeType,
