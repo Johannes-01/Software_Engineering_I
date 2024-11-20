@@ -81,9 +81,8 @@ export async function POST(req: NextRequest) {
     });
   }
   //#endregion
-  // Error while uploading the image to the storage: {"statusCode":"415","error":"invalid_mime_type","message":"mime type undefined is not supported"}
-  //get image type from createImageRequest.path (e.g. './thai_monk_kicking_police.jpg')
-  console.log(JSON.stringify(createImageRequest.image));
+
+  console.log(JSON.stringify(createImageRequest.image.name));
   let mimeType = mime.lookup(createImageRequest.image.name);
   console.log(mimeType);
   if(!mimeType)
