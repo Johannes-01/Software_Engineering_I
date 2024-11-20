@@ -2,6 +2,7 @@ import { createClient } from "@utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import { Item } from "../../../types/item";
+import { Buffer } from "buffer";
 
 export async function POST(req: NextRequest) {
   const createImageRequest = (await req.json()) as {
@@ -121,10 +122,12 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const bytes = await createImageRequest.item.image.arrayBuffer();
-  const buffer = Buffer.from(bytes);
-
-  const { error: storageError } = await supabase.storage
+  try 
+  { 
+    const bytes = await createImageRequest.item.image.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    
+    const { error: storageError } = await supabase.storage
     .from("images")
     .upload(imageId, buffer, {
       cacheControl: '3600',
@@ -132,10 +135,22 @@ export async function POST(req: NextRequest) {
       contentType: createImageRequest.mimeType,
     });
 
-  if (storageError) {
+    if (storageError) {
+      return new NextResponse(
+        `Error while uploading the image to the storage: ${JSON.stringify(
+          storageError
+        )}`,
+        {
+          status: 500,
+        }
+      );
+    }
+  } 
+  catch (error) 
+  {
     return new NextResponse(
-      `Error while uploading the image to the storage: ${JSON.stringify(
-        storageError
+      `Error while reading the image data into an ArrayBuffer: ${JSON.stringify(
+        error
       )}`,
       {
         status: 500,
