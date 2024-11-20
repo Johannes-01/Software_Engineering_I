@@ -2,10 +2,13 @@ import { createClient } from "@utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import { Item } from "../../../types/item";
-import mime from 'mime-types';
 
 export async function POST(req: NextRequest) {
-  const createImageRequest = (await req.json()) as Item;
+  const createImageRequest = (await req.json()) as {
+    item: Item,
+    mimeType: string,
+  };
+
   console.log(createImageRequest);
   const supabase = await createClient();
   const user = await supabase.auth.getUser();
@@ -24,71 +27,69 @@ export async function POST(req: NextRequest) {
   }
 
   //#region check request
-  if(!createImageRequest.category_id) {
+  if(!createImageRequest.item.category_id) {
     return new NextResponse(`\"category_id\" has to be set in the body`, {
       status: 400,
     });
   }
 
   
-  if(!createImageRequest.title) {
+  if(!createImageRequest.item.title) {
     return new NextResponse(`\"title\" has to be set in the body`, {
       status: 400,
     });
   }
 
   
-  if(!createImageRequest.artist) {
+  if(!createImageRequest.item.artist) {
     return new NextResponse(`\"artist\" has to be set in the body`, {
       status: 400,
     });
   }
 
   
-  if(!createImageRequest.motive_height) {
+  if(!createImageRequest.item.motive_height) {
     return new NextResponse(`\"motive_height\" has to be set in the body`, {
       status: 400,
     });
   }
   
-  if(!createImageRequest.motive_width) {
+  if(!createImageRequest.item.motive_width) {
     return new NextResponse(`\"motive_width\" has to be set in the body`, {
       status: 400,
     });
   }
 
-  if(!createImageRequest.height) {
+  if(!createImageRequest.item.height) {
     return new NextResponse(`\"height\" has to be set in the body`, {
       status: 400,
     });
   }
 
-  if(!createImageRequest.width) {
+  if(!createImageRequest.item.width) {
     return new NextResponse(`\"width\" has to be set in the body`, {
       status: 400,
     });
   }
 
-  if(!createImageRequest.price) {
+  if(!createImageRequest.item.price) {
     return new NextResponse(`\"price\" has to be set in the body`, {
       status: 400,
     });
   }
 
-  if (!createImageRequest.image) {
+  if (!createImageRequest.item.image) {
     return new NextResponse(`\"image\" has to be set in the body`, {
       status: 400,
     });
   }
-  //#endregion
 
-  console.log(JSON.stringify(createImageRequest.image.name));
-  let mimeType = mime.lookup(createImageRequest.image.name);
-  console.log(mimeType);
-  if(!mimeType)
-  {
-     mimeType = "image/*";
+  if(!createImageRequest.mimeType) {
+    return new NextResponse(`\"mimiType\" has to be set in the body`, {
+      status: 400,
+    });
   }
+  //#endregion
 
   const imageId = uuidv4();
 
@@ -96,15 +97,15 @@ export async function POST(req: NextRequest) {
     .from("image")
     .insert([
       {
-        category_id: createImageRequest.category_id,
-        title: createImageRequest.title,
-        artist: createImageRequest.artist,
-        motive_height: createImageRequest.motive_height,
-        motive_width: createImageRequest.motive_width,
-        height: createImageRequest.height,
-        width: createImageRequest.width,
-        price: createImageRequest.price,
-        notice: createImageRequest.notice ?? null,
+        category_id: createImageRequest.item.category_id,
+        title: createImageRequest.item.title,
+        artist: createImageRequest.item.artist,
+        motive_height: createImageRequest.item.motive_height,
+        motive_width: createImageRequest.item.motive_width,
+        height: createImageRequest.item.height,
+        width: createImageRequest.item.width,
+        price: createImageRequest.item.price,
+        notice: createImageRequest.item.notice ?? null,
         image_path: imageId,
       },
     ])
@@ -123,10 +124,10 @@ export async function POST(req: NextRequest) {
 
   const { error: storageError } = await supabase.storage
     .from("images")
-    .upload(imageId, createImageRequest.image, {
+    .upload(imageId, createImageRequest.item.image, {
       cacheControl: '3600',
       upsert: false,
-      contentType: mimeType,
+      contentType: createImageRequest.mimeType,
     });
 
   if (storageError) {
