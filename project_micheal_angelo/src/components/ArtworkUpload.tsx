@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { Check, ChevronsUpDown, Upload } from 'lucide-react'
+import { Upload } from 'lucide-react'
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Label } from "./ui/label"
@@ -14,32 +14,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "./ui/command"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "./ui/popover"
 import { cn } from "@utils/tailwind-merge-styles";
 import { Item } from '../types/item'
 import { Category } from '../types/category'
 import { fromDoubleWithTwoDecimalInt } from '../utils/numberExtension'
-import { lookup } from 'mime-types'
 
-// todo free text or artist table?
-const artists = [
+// if we want to fetch artists later on
+/*const artists = [
   "Pablo Picasso",
   "Vincent van Gogh",
   "Leonardo da Vinci",
   "Claude Monet",
   "Frida Kahlo",
-]
+]*/
 
 export default function ArtworkUpload() {
 
@@ -53,7 +40,7 @@ export default function ArtworkUpload() {
     category_id: Category.original,
   });
 
-  const [artistsOpen, setArtistsOpen] = useState(false);
+  // const [artistsOpen, setArtistsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
 
@@ -68,9 +55,9 @@ export default function ArtworkUpload() {
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleSelectChange = (name: string, value: string) => {
+  /*const handleSelectChange = (name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }))
-  }
+  }*/
 
   const handleSelectCategory = (category: Category) => {
     setFormData(prev => ({ ...prev, category_id: category}))
@@ -80,29 +67,26 @@ export default function ArtworkUpload() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    
-    if (!formData.image) {
+    const request = formData;
+
+    if (!request.image) {
       setError("Please upload an artwork");
       return;
     }
 
-    const request = formData;
-    request.price = fromDoubleWithTwoDecimalInt(formData.price);
-    request.height = fromDoubleWithTwoDecimalInt(formData.height);
-    request.width = fromDoubleWithTwoDecimalInt(formData.width);
+    request.price = fromDoubleWithTwoDecimalInt(request.price);
+    request.height = fromDoubleWithTwoDecimalInt(request.height);
+    request.width = fromDoubleWithTwoDecimalInt(request.width);
     
     // todo do we need to have both? --> simon?
-    request.motive_height = formData.height;
-    request.motive_width = formData.width;
-    const mimeType = lookup(formData.image.type);
-    
-    console.log(mimeType);
+    request.motive_height = request.height;
+    request.motive_width = request.width;
     
     fetch('/api/image', {
       method: 'POST',
       body: JSON.stringify({
         item: request,
-        mimeType,
+        mimeType: request.image.type,
       }),
     })
     .then(response => response.json())
@@ -168,7 +152,15 @@ export default function ArtworkUpload() {
             </div>
             <div>
               <Label htmlFor="artist">Artist</Label>
-              <Popover open={artistsOpen} onOpenChange={setArtistsOpen}>
+              <Input
+                  id="artist"
+                  name="artist"
+                  type="text"
+                  value={formData.artist}
+                  onChange={handleInputChange}
+                  required
+                />
+              {/* <Popover open={artistsOpen} onOpenChange={setArtistsOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
@@ -205,7 +197,7 @@ export default function ArtworkUpload() {
                     </CommandGroup>
                   </Command>
                 </PopoverContent>
-              </Popover>
+              </Popover> */}
             </div>
             <div className="flex gap-4">
               <div className="w-1/2">
