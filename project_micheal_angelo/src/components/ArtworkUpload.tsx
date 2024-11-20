@@ -102,7 +102,7 @@ export default function ArtworkUpload() {
       method: 'POST',
       body: JSON.stringify({
         item: request,
-        mimiType: mimeType,
+        mimeType,
       }),
     })
     .then(response => response.json())
