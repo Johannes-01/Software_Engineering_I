@@ -2,6 +2,7 @@ import { createClient } from "@utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import { Item } from "../../../types/item";
+import mime from 'mime-types';
 
 export async function POST(req: NextRequest) {
   const createImageRequest = (await req.json()) as Item;
@@ -81,8 +82,15 @@ export async function POST(req: NextRequest) {
   }
   //#endregion
 
+  console.log(JSON.stringify(createImageRequest.image.name));
+  let mimeType = mime.lookup(createImageRequest.image.name);
+  console.log(mimeType);
+  if(!mimeType)
+  {
+     mimeType = "image/*";
+  }
+
   const imageId = uuidv4();
-  const image_path = `${imageId}.${createImageRequest.image.type}`;
 
   const { data, error } = await supabase
     .from("image")
@@ -97,7 +105,7 @@ export async function POST(req: NextRequest) {
         width: createImageRequest.width,
         price: createImageRequest.price,
         notice: createImageRequest.notice ?? null,
-        image_path: image_path,
+        image_path: imageId,
       },
     ])
     .select();
@@ -115,10 +123,10 @@ export async function POST(req: NextRequest) {
 
   const { error: storageError } = await supabase.storage
     .from("images")
-    .upload(image_path, createImageRequest.image, {
+    .upload(imageId, createImageRequest.image, {
       cacheControl: '3600',
       upsert: false,
-      contentType: createImageRequest.image.type,
+      contentType: mimeType,
     });
 
   if (storageError) {
