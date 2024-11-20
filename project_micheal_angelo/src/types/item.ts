@@ -10,5 +10,4 @@ export interface Item {
     motive_height?: number;
     price: number;
     notice: string;
-    image?: File | undefined;
 }

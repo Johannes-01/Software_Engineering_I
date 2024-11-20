@@ -5,10 +5,69 @@ import { Item } from "../../../types/item";
 import { Buffer } from "buffer";
 
 export async function POST(req: NextRequest) {
-  const createImageRequest = (await req.json()) as {
-    item: Item,
-    mimeType: string,
-  };
+  let file: File | undefined;
+  let itemData: Item | undefined;
+
+  if (req.headers.get("content-type")?.includes("multipart/form-data")) {
+    try {
+      const formData = await req.formData();
+      file = formData.get("file") as File | undefined;
+      itemData = formData.get("itemData") as unknown as Item | undefined;
+    } catch (error) {
+      return new NextResponse(
+        `Error while deserializing item and file: ${error}`,
+        {
+          status: 400,
+        }
+      );
+    }
+  } else if (req.headers.get("content-type")?.includes("application/json")) {
+    try {
+      itemData = (await req.json()) as Item;
+    } catch (error) {
+      return new NextResponse(`Error while deserializing item: ${error}`, {
+        status: 400,
+      });
+    }
+  } else {
+    return NextResponse.json(
+      {
+        error:
+          "Invalid request type. Must be 'multipart/form-data' or 'application/json'",
+      },
+      { status: 400 }
+    );
+  }
+
+  if (!itemData) {
+    return new NextResponse(`Error while deserializing item.`, {
+      status: 400,
+    });
+  }
+
+  // todo validate itemData with zod
+  /*const requiredFields: (keyof Item)[] = [
+    "category_id",
+    "title",
+    "artist",
+    "width",
+    "height",
+    "price",
+  ];
+
+  for (const field of requiredFields) {
+    if (
+      itemData[field] === undefined ||
+      itemData[field] === null ||
+      ((field === "width" || field === "height" || field === "price") &&
+        isNaN(Number(itemData[field])))
+    ) {
+      return NextResponse.json(
+        { error: `Missing or invalid required field: ${field}` },
+        { status: 400 }
+      );
+    }
+  }*/
 
   const supabase = await createClient();
   const user = await supabase.auth.getUser();
@@ -26,86 +85,57 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  //#region check request
-  if(!createImageRequest.item.category_id) {
-    return new NextResponse(`\"category_id\" has to be set in the body`, {
-      status: 400,
-    });
-  }
+  let imageId: string | undefined;
 
-  
-  if(!createImageRequest.item.title) {
-    return new NextResponse(`\"title\" has to be set in the body`, {
-      status: 400,
-    });
-  }
+  if (file) {
+    try {
+      imageId = uuidv4();
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
 
-  
-  if(!createImageRequest.item.artist) {
-    return new NextResponse(`\"artist\" has to be set in the body`, {
-      status: 400,
-    });
-  }
+      const { error: storageError } = await supabase.storage
+        .from("images")
+        .upload(imageId, buffer, {
+          cacheControl: "3600",
+          upsert: false,
+          contentType: file.type,
+        });
 
-  
-  if(!createImageRequest.item.motive_height) {
-    return new NextResponse(`\"motive_height\" has to be set in the body`, {
-      status: 400,
-    });
+      if (storageError) {
+        return new NextResponse(
+          `Error while uploading the image to the storage: ${JSON.stringify(
+            storageError
+          )}`,
+          {
+            status: 500,
+          }
+        );
+      }
+    } catch (error) {
+      return new NextResponse(
+        `Error while reading the image data into an ArrayBuffer: ${JSON.stringify(
+          error
+        )}`,
+        {
+          status: 500,
+        }
+      );
+    }
   }
-  
-  if(!createImageRequest.item.motive_width) {
-    return new NextResponse(`\"motive_width\" has to be set in the body`, {
-      status: 400,
-    });
-  }
-
-  if(!createImageRequest.item.height) {
-    return new NextResponse(`\"height\" has to be set in the body`, {
-      status: 400,
-    });
-  }
-
-  if(!createImageRequest.item.width) {
-    return new NextResponse(`\"width\" has to be set in the body`, {
-      status: 400,
-    });
-  }
-
-  if(!createImageRequest.item.price) {
-    return new NextResponse(`\"price\" has to be set in the body`, {
-      status: 400,
-    });
-  }
-
-  if (!createImageRequest.item.image) {
-    return new NextResponse(`\"image\" has to be set in the body`, {
-      status: 400,
-    });
-  }
-
-  if(!createImageRequest.mimeType) {
-    return new NextResponse(`\"mimiType\" has to be set in the body`, {
-      status: 400,
-    });
-  }
-  //#endregion
-
-  const imageId = uuidv4();
 
   const { data, error } = await supabase
     .from("image")
     .insert([
       {
-        category_id: createImageRequest.item.category_id,
-        title: createImageRequest.item.title,
-        artist: createImageRequest.item.artist,
-        motive_height: createImageRequest.item.motive_height,
-        motive_width: createImageRequest.item.motive_width,
-        height: createImageRequest.item.height,
-        width: createImageRequest.item.width,
-        price: createImageRequest.item.price,
-        notice: createImageRequest.item.notice ?? null,
+        category_id: itemData.category_id,
+        title: itemData.title,
+        artist: itemData.artist,
+        motive_height: itemData.motive_height,
+        motive_width: itemData.motive_width,
+        height: itemData.height,
+        width: itemData.width,
+        price: itemData.price,
+        notice: itemData.notice,
         image_path: imageId,
       },
     ])
@@ -116,42 +146,6 @@ export async function POST(req: NextRequest) {
       `Error while creating the db item for the image: ${JSON.stringify(
         error
       )}}`,
-      {
-        status: 500,
-      }
-    );
-  }
-
-  try 
-  { 
-    const bytes = await createImageRequest.item.image.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    
-    const { error: storageError } = await supabase.storage
-    .from("images")
-    .upload(imageId, buffer, {
-      cacheControl: '3600',
-      upsert: false,
-      contentType: createImageRequest.mimeType,
-    });
-
-    if (storageError) {
-      return new NextResponse(
-        `Error while uploading the image to the storage: ${JSON.stringify(
-          storageError
-        )}`,
-        {
-          status: 500,
-        }
-      );
-    }
-  } 
-  catch (error) 
-  {
-    return new NextResponse(
-      `Error while reading the image data into an ArrayBuffer: ${JSON.stringify(
-        error
-      )}`,
       {
         status: 500,
       }
