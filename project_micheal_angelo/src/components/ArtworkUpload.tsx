@@ -30,6 +30,7 @@ import { cn } from "@utils/tailwind-merge-styles";
 import { Item } from '../types/item'
 import { Category } from '../types/category'
 import { fromDoubleWithTwoDecimalInt } from '../utils/numberExtension'
+import { lookup } from 'mime-types'
 
 // todo free text or artist table?
 const artists = [
@@ -93,10 +94,16 @@ export default function ArtworkUpload() {
     // todo do we need to have both? --> simon?
     request.motive_height = formData.height;
     request.motive_width = formData.width;
-
+    const mimeType = lookup(formData.image.type);
+    
+    console.log(mimeType);
+    
     fetch('/api/image', {
       method: 'POST',
-      body: JSON.stringify(request),
+      body: JSON.stringify({
+        item: request,
+        mimiType: mimeType,
+      }),
     })
     .then(response => response.json())
     .then(data => {
