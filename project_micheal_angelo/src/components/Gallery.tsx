@@ -18,19 +18,11 @@ import { Category } from '../types/category';
 const images: Array<Item & { imageUrl: string }> = [
   { id: 1, width: 0, height: 0, title: 'Artwork Title 1', artist: 'John Doe', category: Category.original, notice: 'A short description of the artwork. This piece showcases...', price: 100, imageUrl: 'https://kvhaquacaxdwniozpuhq.supabase.co/storage/v1/object/sign/images/056c37d8-99db-41c5-8a01-9b1668b683ca?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJpbWFnZXMvMDU2YzM3ZDgtOTlkYi00MWM1LThhMDEtOWIxNjY4YjY4M2NhIiwiaWF0IjoxNzMyMjA5NTQ2LCJleHAiOjE3MzI4MTQzNDZ9.Uzsb_oFwE-x031r9I56V_NCwKCrqxudPdtIZpuwfpsc&t=2024-11-21T17%3A19%3A06.633Z' },
   { id: 2, width: 0, height: 0, title: 'Artwork Title 2', artist: 'Jane Smith', category: Category.replica, notice: 'A short description of the artwork. This piece showcases...', price: 200, imageUrl: '/placeholder.svg' },
-  { id: 3, width: 0, height: 0, title: 'Artwork Title 3', artist: 'Bob Johnson', category: Category.grafic, notice: 'A short description of the artwork. This piece showcases...', price: 300, imageUrl: '/placeholder.svg' },
-  { id: 4, width: 0, height: 0, title: 'Artwork Title 4', artist: 'Alice Brown', category: Category.original, notice: 'A short description of the artwork. This piece showcases...', price: 400, imageUrl: '/placeholder.svg' },
-  { id: 5, width: 0, height: 0, title: 'Artwork Title 5', artist: 'Charlie Green', category: Category.replica, notice: 'A short description of the artwork. This piece showcases...', price: 500, imageUrl: '/placeholder.svg' },
+  { id: 3, width: 0, height: 0, title: 'Artwork Title 3', artist: 'Bob Johnson', category: Category.original, notice: 'A short description of the artwork. This piece showcases...', price: 300, imageUrl: '/placeholder.svg' },
+  { id: 4, width: 0, height: 0, title: 'Artwork Title 4', artist: 'Alice Brown', category: Category.grafic, notice: 'A short description of the artwork. This piece showcases...', price: 400, imageUrl: '/placeholder.svg' },
+  { id: 5, width: 0, height: 0, title: 'Artwork Title 5', artist: 'Charlie Green', category: Category.original, notice: 'A short description of the artwork. This piece showcases...', price: 500, imageUrl: '/placeholder.svg' },
   { id: 6, width: 0, height: 0, title: 'Artwork Title 6', artist: 'Diana White', category: Category.grafic, notice: 'A short description of the artwork. This piece showcases...', price: 600, imageUrl: '/placeholder.svg' },
-  { id: 7, width: 0, height: 0, title: 'Artwork Title 7', artist: 'Diana White', category: Category.grafic, notice: 'A short description of the artwork. This piece showcases...', price: 600, imageUrl: '/placeholder.svg' },
-  { id: 1, width: 0, height: 0, title: 'Artwork Title 1', artist: 'John Doe', category: Category.original, notice: 'A short description of the artwork. This piece showcases...', price: 100, imageUrl: 'https://kvhaquacaxdwniozpuhq.supabase.co/storage/v1/object/sign/images/056c37d8-99db-41c5-8a01-9b1668b683ca?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJpbWFnZXMvMDU2YzM3ZDgtOTlkYi00MWM1LThhMDEtOWIxNjY4YjY4M2NhIiwiaWF0IjoxNzMyMjA5NTQ2LCJleHAiOjE3MzI4MTQzNDZ9.Uzsb_oFwE-x031r9I56V_NCwKCrqxudPdtIZpuwfpsc&t=2024-11-21T17%3A19%3A06.633Z' },
-  { id: 2, width: 0, height: 0, title: 'Artwork Title 2', artist: 'Jane Smith', category: Category.replica, notice: 'A short description of the artwork. This piece showcases...', price: 200, imageUrl: '/placeholder.svg' },
-  { id: 3, width: 0, height: 0, title: 'Artwork Title 3', artist: 'Bob Johnson', category: Category.grafic, notice: 'A short description of the artwork. This piece showcases...', price: 300, imageUrl: '/placeholder.svg' },
-  { id: 4, width: 0, height: 0, title: 'Artwork Title 4', artist: 'Alice Brown', category: Category.original, notice: 'A short description of the artwork. This piece showcases...', price: 400, imageUrl: '/placeholder.svg' },
-  { id: 5, width: 0, height: 0, title: 'Artwork Title 5', artist: 'Charlie Green', category: Category.replica, notice: 'A short description of the artwork. This piece showcases...', price: 500, imageUrl: '/placeholder.svg' },
-  { id: 6, width: 0, height: 0, title: 'Artwork Title 6', artist: 'Diana White', category: Category.grafic, notice: 'A short description of the artwork. This piece showcases...', price: 600, imageUrl: '/placeholder.svg' },
-  { id: 7, width: 0, height: 0, title: 'Artwork Title 7', artist: 'Diana White', category: Category.grafic, notice: 'A short description of the artwork. This piece showcases...', price: 600, imageUrl: '/placeholder.svg' },
-
+  { id: 7, width: 0, height: 0, title: 'Artwork Title 7', artist: 'Diana White', category: Category.replica, notice: 'A short description of the artwork. This piece showcases...', price: 600, imageUrl: '/placeholder.svg' },
 ]
 
 // if we want to fetch artists
@@ -102,28 +94,27 @@ export default function Gallery() {
         </Select>
         </div> */}
           <div className='w-[10%]'>
-            <Select
-              value={categoryFilter?.toString()}
-              onValueChange={(value: string) => {
-                const numValue = value === Category.ALL.toString()
-                  ? Category.ALL
-                  : Number(value) as Category;
-                setCategoryFilter(numValue);
-              }}
-            >
-              <SelectTrigger>
+            <Select onValueChange={(value: string) => {
+              const numValue = value === Category.ALL.toString()
+                ? Category.ALL
+                : Number(value) as Category;
+              setCategoryFilter(numValue);
+            }}>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={Category.ALL.toString()}>All Categories</SelectItem>
-                {Object.values(Category)
-                  .filter(category => typeof category === 'number')
-                  .map((category) => (
-                    <SelectItem key={category} value={category.toString()}>
-                      {Category[category]}
+                <SelectItem value="all">All Categories</SelectItem>
+                {Object.entries(Category)
+                  .filter(([value]) => !isNaN(Number(value)))
+                  .map(([key, value]) => (
+                    <SelectItem
+                      key={key}
+                      value={key}
+                    >
+                      {String(value.toString()).charAt(0).toLocaleUpperCase() + String(value.toString()).slice(1)}
                     </SelectItem>
-                  ))
-                }
+                  ))}
               </SelectContent>
             </Select>
           </div>
