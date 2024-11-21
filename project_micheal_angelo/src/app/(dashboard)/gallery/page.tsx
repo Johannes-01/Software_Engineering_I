@@ -1,9 +1,9 @@
-import ArtworkUpload from "../../../components/ArtworkUpload";
+import Gallery from "../../../components/Gallery";
 
 export default function GalleryPage() {
     return (
         <>
-            <ArtworkUpload />
+            <Gallery />
         </>
     );
 }

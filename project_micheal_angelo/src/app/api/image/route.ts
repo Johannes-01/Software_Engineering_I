@@ -1,12 +1,12 @@
 import { createClient } from "@utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
-import { Item } from "../../../types/item";
+import { ItemRequest } from "../../../types/item";
 import { Buffer } from "buffer";
 
 export async function POST(req: NextRequest) {
   let file: File | undefined;
-  let itemData: Item | undefined;
+  let itemData: ItemRequest | undefined;
 
   if (req.headers.get("content-type")?.includes("multipart/form-data")) {
     try {
@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
       file = formData.get("file") as File | undefined;
       const formDataItemData = formData.get("itemData") ?? "";
       const formDataString = formDataItemData.toString();
-      itemData = JSON.parse(formDataString)  as Item | undefined;
+      itemData = JSON.parse(formDataString)  as ItemRequest | undefined;
       console.log(itemData);
     } catch (error) {
       return new NextResponse(
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     }
   } else if (req.headers.get("content-type")?.includes("application/json")) {
     try {
-      itemData = (await req.json()) as Item;
+      itemData = (await req.json()) as ItemRequest;
     } catch (error) {
       return new NextResponse(`Error while deserializing item: ${error}`, {
         status: 400,
@@ -49,8 +49,8 @@ export async function POST(req: NextRequest) {
   }
 
   // todo validate itemData with zod
-  const requiredFields: (keyof Item)[] = [
-    "category_id",
+  const requiredFields: (keyof ItemRequest)[] = [
+    "category",
     "title",
     "artist",
     "width",
@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
     .from("image")
     .insert([
       {
-        category_id: itemData.category_id,
+        category_id: itemData.category,
         title: itemData.title,
         artist: itemData.artist,
         motive_height: itemData.motive_height,
