@@ -12,7 +12,10 @@ export async function POST(req: NextRequest) {
     try {
       const formData = await req.formData();
       file = formData.get("file") as File | undefined;
-      itemData = formData.get("itemData") as unknown as Item | undefined;
+      const formDataItemData = formData.get("itemData") ?? "";
+      const formDataString = formDataItemData.toString();
+      itemData = JSON.parse(formDataString)  as Item | undefined;
+      console.log(itemData);
     } catch (error) {
       return new NextResponse(
         `Error while deserializing item and file: ${error}`,
@@ -46,7 +49,7 @@ export async function POST(req: NextRequest) {
   }
 
   // todo validate itemData with zod
-  /*const requiredFields: (keyof Item)[] = [
+  const requiredFields: (keyof Item)[] = [
     "category_id",
     "title",
     "artist",
@@ -67,7 +70,7 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-  }*/
+  }
 
   const supabase = await createClient();
   const user = await supabase.auth.getUser();
