@@ -314,4 +314,52 @@ grant truncate on table "public"."topic_folder" to "service_role";
 
 grant update on table "public"."topic_folder" to "service_role";
 
+create policy "admin - topic_folder"
+    on "public"."topic_folder"
+    to "authenticated"
+    using (auth.jwt() -> 'user_metadata' ->> 'role' = 'admin');
 
+create policy "admin - category"
+    on "public"."category"
+    as permissive
+    for all
+    to "authenticated"
+    using (auth.jwt() -> 'user_metadata' ->> 'role' = 'admin');
+
+create policy "authenticated - category"
+    on "public"."category"
+    as permissive
+    for select
+    to "authenticated"
+    using (true);
+
+create policy "admin - image"
+    on "public"."image"
+    as permissive
+    for all
+    to "authenticated"
+    using (auth.jwt() -> 'user_metadata' ->> 'role' = 'admin');
+
+create policy "authenticated - image"
+    on "public"."image"
+    as permissive
+    for select
+    to "authenticated"
+    using (true);
+
+create policy "authenticated - image_to_topic_folder"
+    on "public"."image_to_topic_folder"
+    to "authenticated"
+    using (true);
+
+create policy "matching user - selection"
+    on "public"."selection"
+    as permissive
+    to "authenticated"
+    using (auth.uid() = customer_id);
+
+create policy "admin - selection"
+    on "public"."selection"
+    as permissive
+    to "authenticated"
+    using (auth.jwt() -> 'user_metadata' ->> 'role' = 'admin');
