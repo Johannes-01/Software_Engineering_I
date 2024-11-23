@@ -11,3 +11,7 @@ export function forbiddenError() {
 export function internalServerError() {
     return NextResponse.json({ message: "Something went wrong" }, { status: 500 });
 }
+
+export function badRequestError(failedValidationMessage: string) {
+    return NextResponse.json({ message: failedValidationMessage }, { status: 400 });
+}
