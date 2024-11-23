@@ -5,21 +5,25 @@ on:
     branches:
         - main
 
-jobs: 
-    build:
-        runs-on: ubuntu-latest
-        steps: 
-          - uses: actions/checkout@v3
-            with:
-              sparse-checkout: ./project_micheal_angelo
-          - name: Install dependencies
-            run: npm install
-          - name: Build   
-            run: npm run build
-
+jobs:
     test:
       runs-on: ubuntu-latest
-      needs: [build]
+
       steps:
-        - run: echo start testing ...
+        - name: Checkout Code
+          uses: actions/checkout@v4
+
+        - name: Setup Node Environment
+          uses: actions/setup-node@v4
+          with:
+            node-version: 20
+            cache: 'npm'
+
+        - name: Install Dependencies
+          run: npm ci
+          working-directory: project_micheal_angelo
+
+        - name: Vitest Run
+          run: npm run test
+          working-directory: project_micheal_angelo
 
