@@ -15,3 +15,7 @@ export function internalServerError() {
 export function badRequestError(failedValidationMessage: string) {
     return NextResponse.json({ message: failedValidationMessage }, { status: 400 });
 }
+
+export function conflictError() {
+    return NextResponse.json({ message: "Resource does already exist" }, { status: 409 });
+}

@@ -1,4 +1,10 @@
-import { badRequestError, forbiddenError, internalServerError, unauthorizedError } from "@utils/server-errors";
+import {
+    badRequestError,
+    conflictError,
+    forbiddenError,
+    internalServerError,
+    unauthorizedError,
+} from "@utils/server-errors";
 import { createSupabaseClient, isAdmin } from "@utils/supabase-helper";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -44,10 +50,21 @@ export async function POST(request: NextRequest) {
         return badRequestError("name is missing in request body");
     }
 
-    const { error } = await supabase.from("category").insert({ name });
+    const { data, error: selectError } = await supabase.from("category").select("name").eq("name", name);
 
-    if (error) {
-        console.error("/api/category:POST -> ", error.message);
+    if (selectError) {
+        console.error("/api/category:POST -> ", selectError.message);
+        return internalServerError();
+    }
+
+    if (!data || data.length > 0) {
+        return conflictError();
+    }
+
+    const { error: insertError } = await supabase.from("category").insert({ name });
+
+    if (insertError) {
+        console.error("/api/category:POST -> ", insertError.message);
         return internalServerError();
     }
 
