@@ -57,3 +57,30 @@ export const PUT = handlerWithPreconditions(
         return new NextResponse("Created", { status: 201 });
     },
 )
+
+export const DELETE = handlerWithPreconditions(
+    [requireAdmin],
+    async ({ supabaseClient }, request, { params }: { params: { categoryId: string }}) => {
+        supabaseClient ??= await createSupabaseClient()
+
+        const { data: doesIdExist, error: checkError } = await supabaseClient.from("category").select("id").eq("id", params.categoryId)
+
+        if (checkError) {
+            console.error("/api/category/[categoryId]:DELETE | delete -> ", checkError.message)
+            return internalServerError()
+        }
+
+        if (doesIdExist && doesIdExist.length === 0) {
+            return notFoundError()
+        }
+
+        const { error: deleteError } = await supabaseClient.from("category").delete().eq("id", params.categoryId)
+
+        if (deleteError) {
+            console.error("/api/category/[categoryId]:DELETE | delete -> ", deleteError.message)
+            return internalServerError()
+        }
+
+        return new NextResponse("OK", { status: 200 })
+    }
+)
