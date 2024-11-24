@@ -1,72 +1,59 @@
-import {
-    badRequestError,
-    conflictError,
-    forbiddenError,
-    internalServerError,
-    unauthorizedError,
-} from "@utils/server-errors";
-import { createSupabaseClient, isAdmin } from "@utils/supabase-helper";
+import { handlerWithPreconditions, requireAdmin } from "@utils/custom-middleware";
+import { badRequestError, conflictError, internalServerError } from "@utils/server-errors";
+import { createSupabaseClient } from "@utils/supabase-helper";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET() {
-    const supabase = await createSupabaseClient();
+export const GET = handlerWithPreconditions(
+    [requireAdmin],
+    async ({ supabaseClient }, _1, _2) => {
+        supabaseClient ??= await createSupabaseClient()
 
-    const { data: { user } } = await supabase.auth.getUser();
+        const {
+            data,
+            error,
+        } = await supabaseClient.from('category').select('*');
 
-    if (!user) {
-        return unauthorizedError();
+        if (error) {
+            console.error("/api/category:GET -> ", error.message);
+            return internalServerError();
+        }
+
+        return NextResponse.json(data, { status: 200 });
     }
+)
 
-    if (!isAdmin(user)) {
-        return forbiddenError();
-    }
+export const POST = handlerWithPreconditions(
+    [requireAdmin],
+    async ({ supabaseClient }, request: NextRequest, _) => {
+        supabaseClient ??= await createSupabaseClient()
 
-    const { data, error } = await supabase.from('category').select('*');
+        const { name } = await request.json();
 
-    if (error) {
-        console.error("/api/category:GET -> ", error.message);
-        return internalServerError();
-    }
+        if (!name) {
+            return badRequestError("name is missing in request body");
+        }
 
-    return NextResponse.json(data, { status: 200 });
-}
+        const {
+            data,
+            error: selectError,
+        } = await supabaseClient.from("category").select("name").eq("name", name);
 
-export async function POST(request: NextRequest) {
-    const supabase = await createSupabaseClient();
+        if (selectError) {
+            console.error("/api/category:POST -> ", selectError.message);
+            return internalServerError();
+        }
 
-    const { data: { user } } = await supabase.auth.getUser();
+        if (!data || data.length > 0) {
+            return conflictError();
+        }
 
-    if (!user) {
-        return unauthorizedError();
-    }
+        const { error: insertError } = await supabaseClient.from("category").insert({ name });
 
-    if (!isAdmin(user)) {
-        return forbiddenError();
-    }
+        if (insertError) {
+            console.error("/api/category:POST -> ", insertError.message);
+            return internalServerError();
+        }
 
-    const { name } = await request.json();
-
-    if (!name) {
-        return badRequestError("name is missing in request body");
-    }
-
-    const { data, error: selectError } = await supabase.from("category").select("name").eq("name", name);
-
-    if (selectError) {
-        console.error("/api/category:POST -> ", selectError.message);
-        return internalServerError();
-    }
-
-    if (!data || data.length > 0) {
-        return conflictError();
-    }
-
-    const { error: insertError } = await supabase.from("category").insert({ name });
-
-    if (insertError) {
-        console.error("/api/category:POST -> ", insertError.message);
-        return internalServerError();
-    }
-
-    return new NextResponse("Created", { status: 201 });
-}
+        return new NextResponse("Created", { status: 201 });
+    },
+)
