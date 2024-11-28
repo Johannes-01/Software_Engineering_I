@@ -1,24 +1,40 @@
-name: Build and create artifact on tag
+name: Release to Production
+
 on:
-    push: 
-        tags: []
+  release:
+    types:
+      - published
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
-  build:
+  sync-production:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
-            sparse-checkout: ./project_micheal_angelo
-      - name: Print working directory
-        run: "echo Working directory: $(pwd)"
-      - name: Install dependencies
-        run: npm install
-      - name: Build   
-        run: npm run build
-      - name: Create artifact
-        uses: actions/upload-artifact@v3
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-        with:
-            name: michael-angelo-${{ github.ref_name }}
-            path: out
+      - name: Configure Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "github-actions@github.com"
+
+      - name: Get release tag
+        id: get_tag
+        run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Sync pre-production to production
+        run: |
+          git checkout pre-production
+          
+          git checkout -b release/${{ steps.get_tag.outputs.TAG }}
+          
+          git push origin release/${{ steps.get_tag.outputs.TAG }}:production --force
+          
+          git checkout pre-production
+          git branch -D release/${{ steps.get_tag.outputs.TAG }}
