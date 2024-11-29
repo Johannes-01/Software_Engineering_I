@@ -1,4 +1,4 @@
-import { createClient } from '@utils/supabase/server';
+import { createSupabaseClient } from '@utils/supabase-helper';
 import { NextResponse } from 'next/server';
 // import z from "zod";
 
@@ -19,7 +19,7 @@ export async function POST(req: Request) {
         });
     }
 
-    const supabase = await createClient()
+    const supabase = await createSupabaseClient();
 
     const {
         error,
