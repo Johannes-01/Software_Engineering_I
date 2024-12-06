@@ -6,7 +6,7 @@ import {
     requireExists,
     validateBody,
 } from "@utils/custom-middleware";
-import { internalServerError } from "@utils/server-errors";
+import { conflictError, internalServerError } from "@utils/server-errors";
 import { NextResponse } from 'next/server';
 import z from "zod"
 
@@ -70,6 +70,11 @@ export const DELETE = handlerWithPreconditions<DeleteContext>(
         _,
         { params },
     ) => {
+        if (["0", "1", "2"].includes(params.categoryId)) {
+            console.error(`${route} -> cannot delete initial category ${params.categoryId}`);
+            return conflictError(`Cannot delete initial category ${params.categoryId}`)
+        }
+
         const { error: deleteError } = await supabaseClient.from("category").delete().eq("id", params.categoryId)
 
         if (deleteError) {
