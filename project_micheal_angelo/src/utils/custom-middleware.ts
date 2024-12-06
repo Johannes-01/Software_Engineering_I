@@ -38,7 +38,8 @@ type Precondition = (
 type HandlerFunction<T extends MiddlewareContext> = (
     context: T,
     request: Request,
-    args: Args,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    args: any,
 ) => Promise<NextResponse<unknown>>
 
 export function handlerWithPreconditions<T extends MiddlewareContext>(
