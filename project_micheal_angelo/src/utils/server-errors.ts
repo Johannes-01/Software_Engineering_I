@@ -19,3 +19,7 @@ export function badRequestError(failedValidationMessage: string) {
 export function conflictError() {
     return NextResponse.json({ message: "Resource does already exist" }, { status: 409 });
 }
+
+export function notFoundError(message?: string) {
+    return NextResponse.json({ message: message ?? "Could not find the specified item" }, { status: 400 });
+}
