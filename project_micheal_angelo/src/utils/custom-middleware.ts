@@ -43,9 +43,11 @@ type HandlerFunction<T extends MiddlewareContext> = (
 export function handlerWithPreconditions<T extends MiddlewareContext>(
     preconditions: Precondition[],
     handler: HandlerFunction<T>,
-    context: MiddlewareContext = { route: "undefined call context" },
+    initialContext?: MiddlewareContext,
 ) {
     return async (request: Request, args: Args): Promise<NextResponse<unknown>> => {
+        let context = structuredClone(initialContext) ?? { route: "undefined call context" }
+
         for (const precondition of preconditions) {
             const result = await precondition(context, request, args)
 
