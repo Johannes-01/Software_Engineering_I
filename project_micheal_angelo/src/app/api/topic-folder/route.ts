@@ -45,7 +45,7 @@ export const POST = handlerWithPreconditions<PostContext>(
     [
         requireAdmin,
         validateBody(postBody),
-        async (context) => requireUnique("topic_folder", "name", context.body!.name)(context)
+        async (context) => requireUnique("topic_folder", { name: context.body!.name })(context)
     ],
     async ({ supabaseClient, body, route }) => {
         const { error } = await supabaseClient.from("topic_folder").insert(body)
