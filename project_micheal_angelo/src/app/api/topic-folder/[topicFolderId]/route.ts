@@ -128,3 +128,27 @@ export const PUT = handlerWithPreconditions<PutContext>(
         route: "/api/topic-folder/[topicFolderId]:PUT",
     },
 )
+
+interface DeleteContext extends MiddlewareContext {
+    supabaseClient: Exclude<MiddlewareContext["supabaseClient"], undefined>
+}
+
+export const DELETE = handlerWithPreconditions<DeleteContext>(
+    [
+        requireAdmin,
+        topicFolderShouldExist,
+    ],
+    async ({ supabaseClient, route }, _, { params }: Slug) => {
+        const { error } = await supabaseClient
+            .from("topic_folder")
+            .delete()
+            .eq("id", params.topicFolderId)
+
+        if (error) {
+            console.error(`${route} -> ${error.message}`)
+            return internalServerError()
+        }
+
+        return new NextResponse("Deleted", { status: 200 })
+    }
+)
