@@ -49,7 +49,7 @@ export const POST = handlerWithPreconditions<PostContext>(
     [
         requireAdmin,
         validateBody(postSchema),
-        async (context) => requireUnique("category", "name", context.body!.name)(context),
+        async (context) => requireUnique("category", { name: context.body!.name })(context),
     ],
     async ({
         supabaseClient,

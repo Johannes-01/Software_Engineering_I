@@ -13,6 +13,7 @@ import z from "zod"
 export interface MiddlewareContext {
     supabaseClient?: SupabaseClient
     user?: User
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     body?: Record<string, any>;
     route: string;
 }
@@ -22,30 +23,28 @@ interface RequireAdminMiddlewareContext extends MiddlewareContext {
     user: User
 }
 
-type Request = NextRequest
-type Args = {
-    params: {
-        categoryId: string,
-    }
-}
-
 type Precondition = (
     context: MiddlewareContext,
     request: NextRequest,
-    args: Args,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    args: any,
 ) => Promise<MiddlewareContext | NextResponse>
 type HandlerFunction<T extends MiddlewareContext> = (
     context: T,
-    request: Request,
-    args: Args,
+    request: NextRequest,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    args: any,
 ) => Promise<NextResponse<unknown>>
 
 export function handlerWithPreconditions<T extends MiddlewareContext>(
     preconditions: Precondition[],
     handler: HandlerFunction<T>,
-    context: MiddlewareContext = { route: "undefined call context" },
+    initialContext?: MiddlewareContext,
 ) {
-    return async (request: Request, args: Args): Promise<NextResponse<unknown>> => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return async (request: NextRequest, args: any): Promise<NextResponse<unknown>> => {
+        let context = structuredClone(initialContext) ?? { route: "undefined call context" }
+
         for (const precondition of preconditions) {
             const result = await precondition(context, request, args)
 
@@ -78,6 +77,7 @@ export async function requireAdmin(context: MiddlewareContext): Promise<RequireA
     return context as RequireAdminMiddlewareContext
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function validateBody(schema: z.ZodObject<any>) {
     return async (
         context: MiddlewareContext,
@@ -89,7 +89,7 @@ export function validateBody(schema: z.ZodObject<any>) {
 
         if (error) {
             console.error(`${context.route} | route called with invalid body`)
-            return badRequestError(error.message)
+            return badRequestError(JSON.parse(error.message))
         }
 
         return context
@@ -119,14 +119,20 @@ export function requireExists(table: string, tableKey: string, value: string) {
     }
 }
 
-export function requireUnique(table: string, columnKey: string, value: string) {
+export function requireUnique(table: string, keyValuePair: Record<string, string>) {
     return async (context: MiddlewareContext) => {
         context.supabaseClient ??= await createSupabaseClient()
+
+        const selectCall = context.supabaseClient.from(table).select()
+
+        for (const pair of Object.entries(keyValuePair)) {
+            selectCall.eq(pair[0], pair[1])
+        }
 
         const {
             data: valueAlreadyExists,
             error: selectNameError,
-        } = await context.supabaseClient.from(table).select(columnKey).eq(columnKey, value)
+        } = await selectCall
 
         if (selectNameError) {
             console.error(`${context.route} | unexpected supabase error when checking for unique item -> `, selectNameError.message)
