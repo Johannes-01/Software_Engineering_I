@@ -12,7 +12,7 @@ export function internalServerError() {
     return NextResponse.json({ message: "Something went wrong" }, { status: 500 });
 }
 
-export function badRequestError(failedValidationMessage: string) {
+export function badRequestError(failedValidationMessage: unknown) {
     return NextResponse.json({ message: failedValidationMessage }, { status: 400 });
 }
 
