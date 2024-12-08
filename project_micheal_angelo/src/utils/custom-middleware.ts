@@ -109,14 +109,20 @@ export function validateBody(schema: z.ZodObject<any>) {
     }
 }
 
-export function requireExists(table: string, tableKey: string, value: string) {
+export function requireExists(table: string, values: Record<string, unknown>) {
     return async (context: MiddlewareContext) => {
         context.supabaseClient ??= await createSupabaseClient()
+
+        let selectCall = context.supabaseClient.from(table).select()
+
+        for (const pair of Object.entries(values)) {
+            selectCall = selectCall.eq(pair[0], pair[1])
+        }
 
         const {
             data: idMatch,
             error: selectError,
-        } = await context.supabaseClient.from(table).select(tableKey).eq(tableKey, value);
+        } = await selectCall
 
         if (selectError) {
             console.error(`${context.route} | unexpected supabase error when checking if value exists -> `, selectError.message);
@@ -125,7 +131,7 @@ export function requireExists(table: string, tableKey: string, value: string) {
 
         if (!idMatch || idMatch.length === 0) {
             console.error(`${context.route} | `)
-            return notFoundError(`Could not find value of ${value} inside ${tableKey} of ${table}`);
+            return notFoundError(`Could not find key value kombination ${Object.entries(values).flat().join(" ")} of ${table}`);
         }
 
         return context;
