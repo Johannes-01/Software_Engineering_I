@@ -46,7 +46,7 @@ const postBody = z.object({
     imageId: z.string().min(1),
 })
 
-const imageIdShouldExist= async (context: MiddlewareContext) => requireExists(
+const imageIdShouldExist = async (context: MiddlewareContext) => requireExists(
     "image",
     "id",
     context.body!.imageId
@@ -89,5 +89,42 @@ export const POST = handlerWithPreconditions<PostContext>(
     },
     {
         route: "/api/topic-folder/[topicFolderId]:POST",
+    },
+)
+
+interface PutContext extends MiddlewareContext {
+    supabaseClient: Exclude<MiddlewareContext["supabaseClient"], undefined>,
+    body: { name: string, description?: string }
+}
+
+const putBody = z.object({
+    name: z.string().min(1).optional(),
+    description: z.string().optional(),
+})
+
+export const PUT = handlerWithPreconditions<PutContext>(
+    [
+        requireAdmin,
+        validateBody(putBody),
+        topicFolderShouldExist,
+    ],
+    async ({ supabaseClient, body, route }, _, { params }: Slug) => {
+        const { error } = await supabaseClient
+            .from("topic_folder")
+            .update({
+                ...(body.name === undefined ? {} : { name: body.name }),
+                ...(body.description === undefined ? {} : { description: body.description })
+            })
+            .eq("id", params.topicFolderId)
+
+        if (error) {
+            console.error(`${route} -> ${error.message}`)
+            return internalServerError()
+        }
+
+        return new NextResponse("Updated", { status: 200 })
+    },
+    {
+        route: "/api/topic-folder/[topicFolderId]:PUT",
     },
 )
