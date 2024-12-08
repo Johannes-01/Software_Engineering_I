@@ -1,16 +1,23 @@
-'use server';
-
 import { NextResponse } from "next/server";
-import { handlerWithPreconditions, MiddlewareContext, requireAdmin } from "@utils/custom-middleware";
+import {
+    handlerWithPreconditions,
+    MiddlewareContext,
+    requireAdmin, requireExists,
+    requireUnique,
+    validateBody
+} from "@utils/custom-middleware";
 import { internalServerError } from "@utils/server-errors";
+import z from "zod";
 
 interface GetContext extends MiddlewareContext {
     supabaseClient: Exclude<MiddlewareContext["supabaseClient"], undefined>
 }
 
+type Slug = { params: { topicFolderId: string } };
+
 export const GET = handlerWithPreconditions<GetContext>(
     [requireAdmin],
-    async ({ supabaseClient, route }, _, { params }: { params: { topicFolderId: string }}) => {
+    async ({ supabaseClient, route }, _, { params }: Slug) => {
         const { data, error } = await supabaseClient
             .from("image_to_topic_folder")
             .select(`
@@ -27,5 +34,60 @@ export const GET = handlerWithPreconditions<GetContext>(
     },
     {
         route: "/api/topic-folder/[topicFolderId]:GET",
+    },
+)
+
+interface PostContext extends MiddlewareContext {
+    supabaseClient: Exclude<MiddlewareContext["supabaseClient"], undefined>,
+    body: { imageId: string }
+}
+
+const postBody = z.object({
+    imageId: z.string().min(1),
+})
+
+const imageIdShouldExist= async (context: MiddlewareContext) => requireExists(
+    "image",
+    "id",
+    context.body!.imageId
+)(context)
+
+const topicFolderShouldExist = async (context: MiddlewareContext, _: unknown, { params }: Slug) => requireExists(
+    "topic_folder",
+    "id",
+    params.topicFolderId
+)(context)
+
+const imageShouldNotAlreadyExistInTopicFolder = async (context: MiddlewareContext, _: unknown, { params }: Slug) => requireUnique(
+    "image_to_topic_folder",
+    {
+        topic_folder_id: params.topicFolderId,
+        image_id: context.body!.imageId
+    }
+)(context)
+
+export const POST = handlerWithPreconditions<PostContext>(
+    [
+        requireAdmin,
+        validateBody(postBody),
+        imageIdShouldExist,
+        topicFolderShouldExist,
+        imageShouldNotAlreadyExistInTopicFolder,
+    ],
+    async ({ supabaseClient, body, route }, _, { params }: Slug) => {
+        const { error } = await supabaseClient.from("image_to_topic_folder").insert({
+            image_id: body.imageId,
+            topic_folder_id: params.topicFolderId
+        })
+
+        if (error) {
+            console.error(`${route} -> ${error.message}`)
+            return internalServerError()
+        }
+
+        return new NextResponse("Created", { status: 201 })
+    },
+    {
+        route: "/api/topic-folder/[topicFolderId]:POST",
     },
 )

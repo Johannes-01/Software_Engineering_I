@@ -24,7 +24,7 @@ export const PUT = handlerWithPreconditions<PutContext>(
         requireAdmin,
         validateBody(putRequestSchema),
         async (context, _, args) => requireExists("category", "id", args.params.categoryId)(context),
-        async (context) => requireUnique("category", "name", context.body!.name)(context),
+        async (context) => requireUnique("category", { name: context.body!.name })(context),
     ],
     async (
         {
