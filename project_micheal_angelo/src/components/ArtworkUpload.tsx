@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "./ui/select"
 import { cn } from "@utils/tailwind-merge-styles";
-import { Item } from '../types/item'
+import { ItemRequest } from '../types/item'
 import { Category } from '../types/category'
 import { fromDoubleWithTwoDecimalInt } from '../utils/numberExtension'
 
@@ -31,14 +31,14 @@ import { fromDoubleWithTwoDecimalInt } from '../utils/numberExtension'
 export default function ArtworkUpload() 
 {
   const [file, setFile] = useState<File | undefined>(undefined);
-  const [formData, setFormData] = useState<Item>({
+  const [formData, setFormData] = useState<ItemRequest>({
     title: '',
     notice: '',
     artist: '',
     width: 0,
     height: 0,
     price: 0,
-    category_id: Category.original,
+    category: Category.original,
   });
 
   // const [artistsOpen, setArtistsOpen] = useState(false);
@@ -61,7 +61,7 @@ export default function ArtworkUpload()
   }*/
 
   const handleSelectCategory = (category: Category) => {
-    setFormData(prev => ({ ...prev, category_id: category}))
+    setFormData(prev => ({ ...prev, category: category}))
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -88,7 +88,7 @@ export default function ArtworkUpload()
   }
   
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async function uploadItem(item: Item) {
+  async function uploadItem(item: ItemRequest) {
     const payload = {
       ...item,
       // Exclude the File from the JSON payload
@@ -110,12 +110,12 @@ export default function ArtworkUpload()
     }
   }
 
-  async function uploadItemWithFile(item: Item, file: File) {
+  async function uploadItemWithFile(item: ItemRequest, file: File) {
     const formData = new FormData();
     formData.append('file', file);
 
     formData.append('itemData', JSON.stringify({
-      category_id: item.category_id.toString(),
+      category_id: item.category.toString(),
       title: item.title,
       artist: item.artist,
       width: item.width.toString(),
@@ -273,7 +273,7 @@ export default function ArtworkUpload()
             </div>
             <div>
               <Label htmlFor="category_id">Category</Label>
-              <Select onValueChange={(value: string) => handleSelectCategory(value as unknown as Category)} value={formData.category_id.toString()}>
+              <Select onValueChange={(value: string) => handleSelectCategory(value as unknown as Category)} value={formData.category.toString()}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
