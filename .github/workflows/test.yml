@@ -22,7 +22,11 @@ jobs:
         - name: Install Dependencies
           run: npm ci
           working-directory: project_micheal_angelo
-
+        
+        - name: Run Build
+          run: npm run build
+          working-directory: project_micheal_angelo
+          
         - name: Vitest Run
           run: npm run test
           working-directory: project_micheal_angelo
