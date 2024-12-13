@@ -5,14 +5,14 @@ import { NextResponse } from 'next/server';
 export async function POST(req: Request) {
     const { email, password } = await req.json();
 
-    // please use zod for the validation
+    // todo use zod for the validation
     if(!email){
         return new NextResponse("Email falsy", {
             status: 400,
         });
     }
 
-    // todo: check password for minimun requirements
+    // todo check password for minimun requirements
     if(!password){
         return new NextResponse("Password falsy", {
             status: 400,
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
         });
 
     if (error) {
-        // todo: if email no yet confirmed tell the fe and give user message
+        // todo if email no yet confirmed tell the fe and give user message
         return new NextResponse(`Error while registering ${error}`, {
             status: 500,
         });
