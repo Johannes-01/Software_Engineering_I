@@ -150,6 +150,7 @@ export default function ArtworkUpload()
           >
             <input {...getInputProps()} />
             {file ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={URL.createObjectURL(file)}
                 alt="Uploaded artwork"

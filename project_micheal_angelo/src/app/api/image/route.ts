@@ -1,9 +1,12 @@
-import { createClient } from "@utils/supabase/server";
+'use server';
+
 import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import { ItemRequest } from "../../../types/item";
 import { Buffer } from "buffer";
+import { createSupabaseClient } from '@utils/supabase-helper'
 
+// todo requireAdmin middleware
 export async function POST(req: NextRequest) {
   let file: File | undefined;
   let itemData: ItemRequest | undefined;
@@ -72,19 +75,12 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const supabase = await createClient();
+  const supabase = await createSupabaseClient();
   const user = await supabase.auth.getUser();
 
   if (!user) {
     return new NextResponse(`User not authenticated.`, {
       status: 401,
-    });
-  }
-
-  //todo set up authorization
-  if (false) {
-    return new NextResponse(`User not authorized.`, {
-      status: 403,
     });
   }
 
@@ -95,6 +91,12 @@ export async function POST(req: NextRequest) {
       imageId = uuidv4();
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
+
+      if (!file.type.startsWith("image/")) {
+        return new NextResponse(`File is not an image.`, {
+          status: 400,
+        });
+      }
 
       const { error: storageError } = await supabase.storage
         .from("images")
