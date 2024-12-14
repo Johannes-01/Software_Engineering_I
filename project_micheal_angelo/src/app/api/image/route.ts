@@ -4,52 +4,59 @@ import { Item } from "../../../types/item";
 import { Buffer } from "buffer";
 import { createSupabaseClient } from "@utils/supabase-helper";
 import { internalServerError } from "@utils/server-errors";
+import { handlerWithPreconditions, MiddlewareContext, requireUser } from "@utils/custom-middleware";
 
-export async function GET(req: NextRequest) {
-    const searchParams = new URL(req.url).searchParams
-
-    const paginationIndex = Number.isInteger(Number(searchParams.get("p")))
-        ? Number(searchParams.get("p"))
-        : 0
-    const title = searchParams.get("q")
-    const artist = searchParams.get("a")
-    const category = Number.isInteger(Number(searchParams.get("c")))
-        ? Number(searchParams.get("c"))
-        : undefined
-
-    console.log(paginationIndex, title, artist, category)
-
-    const supabase = await createSupabaseClient()
-
-    let supabaseQuery = supabase
-        .from("image")
-        .select("*", { count: "exact" })
-
-    if (title) {
-        supabaseQuery = supabaseQuery.ilike("title", `%${title}%`)
-    }
-
-    if (artist) {
-        supabaseQuery = supabaseQuery.ilike("artist", `%${artist}%`)
-    }
-
-    if (category) {
-        supabaseQuery = supabaseQuery.eq("category_id", category)
-    }
-
-    const {
-        data,
-        error,
-        count
-    } = await supabaseQuery.range(paginationIndex * 10, paginationIndex * 10 + 10)
-
-    if (error) {
-        console.error("/api/image:GET | select -> ", error.message)
-        return internalServerError()
-    }
-
-    return NextResponse.json({ maxCount: count, images: data }, { status: 200 })
+interface GetContext extends MiddlewareContext {
+    supabaseClient: NonNullable<MiddlewareContext["supabaseClient"]>
 }
+
+export const GET = handlerWithPreconditions<GetContext>(
+    [requireUser],
+    async ({ supabaseClient, route }, request) => {
+        const searchParams = new URL(request.url).searchParams
+
+        const paginationIndex = Number.isInteger(Number(searchParams.get("p")))
+            ? Number(searchParams.get("p"))
+            : 0
+        const title = searchParams.get("q")
+        const artist = searchParams.get("a")
+        const category = Number.isInteger(Number(searchParams.get("c")))
+            ? Number(searchParams.get("c"))
+            : undefined
+
+        let supabaseQuery = supabaseClient
+            .from("image")
+            .select("*", { count: "exact" })
+
+        if (title) {
+            supabaseQuery = supabaseQuery.ilike("title", `%${title}%`)
+        }
+
+        if (artist) {
+            supabaseQuery = supabaseQuery.ilike("artist", `%${artist}%`)
+        }
+
+        if (category) {
+            supabaseQuery = supabaseQuery.eq("category_id", category)
+        }
+
+        const {
+            data,
+            error,
+            count
+        } = await supabaseQuery.range(paginationIndex * 10, paginationIndex * 10 + 10)
+
+        if (error) {
+            console.error(`${route} | select -> `, error.message)
+            return internalServerError()
+        }
+
+        return NextResponse.json({ maxCount: count, images: data }, { status: 200 })
+    },
+    {
+        route: "/api/image:GET",
+    }
+)
 
 export async function POST(req: NextRequest) {
     let file: File | undefined;
