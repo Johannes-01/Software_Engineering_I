@@ -7,42 +7,31 @@ interface LoginRequest {
 }
 
 export async function POST(req: Request) {
-    const loginRequest = (await req.json()) as LoginRequest;
+    const { email, password } = await req.json() as LoginRequest;
 
-    if (!loginRequest.email) {
-        return new NextResponse("Email falsy", {
-            status: 400,
-        });
+    if (!email) {
+        return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
-    if (!loginRequest.password) {
-        return new NextResponse("Password falsy", {
-            status: 400,
-        });
+    if (!password) {
+        return NextResponse.json({ error: "Password is required" }, { status: 400 });
     }
 
     const supabase = await createSupabaseClient();
 
-    const {
-        error,
-        data,
-    } = await supabase.auth.signInWithPassword(
-        {
-            email: loginRequest.email,
-            password: loginRequest.password,
-        },
-    );
+    try {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    if (error) {
-        return new NextResponse(`Error while logging in ${error}`, {
-            status: 500,
-        });
+        if (error) {
+            return NextResponse.json({ error: "E-Mail oder Passwort falsch" }, { status: 401 });
+        }
+
+        return NextResponse.json({ token: data.session?.access_token }, { status: 200 });
+    } catch (error) {
+        console.error("Unerwarteter Fehler:", error);
+        return NextResponse.json(
+            { error: "Ein unerwarteter Fehler ist aufgetreten" },
+            { status: 500 }
+        );
     }
-
-    return new NextResponse(JSON.stringify(data), {
-        status: 200,
-        headers: {
-            'Content-Type': 'application/json',
-        },
-    });
 }
