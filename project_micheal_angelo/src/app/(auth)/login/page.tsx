@@ -19,19 +19,19 @@ export default function LoginPage() {
     const [, startTransition] = useTransition();
     const [errors, setErrors] = useState<ErrorState>({});
 
-    const login = async (email: string, password: string): Promise<void> => {
-        setErrors({});
+    const login = () => {
+        startTransition(async () => {
+            setErrors({});
 
-        if (!email) {
-            setErrors((prev) => ({ ...prev, email: "Email ist erforderlich" }));
-            return;
-        }
-        if (!password) {
-            setErrors((prev) => ({ ...prev, password: "Password ist erforderlich" }));
-            return;
-        }
+            if (!email) {
+                setErrors((prev) => ({ ...prev, email: "Email ist erforderlich" }));
+                return;
+            }
+            if (!password) {
+                setErrors((prev) => ({ ...prev, password: "Password ist erforderlich" }));
+                return;
+            }
 
-        try {
             const result = await fetch('/api/login', {
                 method: "POST",
                 body: JSON.stringify({ email, password }),
@@ -40,22 +40,13 @@ export default function LoginPage() {
                 },
             });
 
-            const data = await result.json();
-
             if (!result.ok) {
                 setErrors({ general: "E-Mail oder Passwort falsch" });
                 return;
             }
 
-
-            localStorage.setItem("authToken", data.token);
             redirect('/gallery');
-
-
-    } catch (error) {
-            setErrors({ general: "Ein unerwarteter Fehler ist aufgetreten" });
-            console.log("Login failed:", error);
-        }
+        })
     }
 
 
@@ -64,7 +55,6 @@ export default function LoginPage() {
             <div className="w-full max-w-sm p-6 bg-white shadow-md rounded-md">
                 <form onSubmit={(e) => {
                     e.preventDefault();
-                    login(email, password);
                 }}>
                     <div className="">
                         <div className="w-full max-w-sm ">
@@ -83,6 +73,11 @@ export default function LoginPage() {
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
+                                    onKeyDown={(event) => {
+                                        if (event.key === "Enter") {
+                                            login()
+                                        }
+                                    }}
                                 />
                                 {errors.email && (
                                     <p className="text-red-500 text-sm mt-1">{errors.email}</p>
@@ -96,6 +91,11 @@ export default function LoginPage() {
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
+                                    onKeyDown={(event) => {
+                                        if (event.key === "Enter") {
+                                            login()
+                                        }
+                                    }}
                                 />
                                 {errors.password && (
                                     <p className="text-red-500 text-sm mt-1">{errors.password}</p>
@@ -107,22 +107,21 @@ export default function LoginPage() {
                             <Button
                                 type="button"
                                 className="w-full mb-5"
-                                onClick={() => startTransition(() => login(email, password))}
+                                onClick={login}
                             >
                                 Login
                             </Button>
                         </div>
                         <div className="mt-4 text-center text-sm text-muted-foreground mb-1.5">
-                            Don&apos;t have an account?{" "}
+                            Don&apos;t have an account?
                         </div>
                         <Link href="/register">
-                        <Button
-                            type="button"
-                            className="w-full bg-white text-black border border-gray-300 rounded-md px-4 py-2 hover:bg-gray-100"
-                            // onClick={() => startTransition(() => login(email, password))}
-                        >
-                            Register
-                        </Button>
+                            <Button
+                                type="button"
+                                className="w-full bg-white text-black border border-gray-300 rounded-md px-4 py-2 hover:bg-gray-100"
+                            >
+                                Register
+                            </Button>
                         </Link>
                     </div>
                 </form>
