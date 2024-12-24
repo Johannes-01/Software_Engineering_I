@@ -5,8 +5,8 @@ import {
     internalServerError,
     notFoundError,
     unauthorizedError,
-} from "@utils/server-errors";
-import { createSupabaseClient } from "@utils/supabase-helper";
+} from "../utils/server-errors";
+import { createSupabaseClient } from "../utils/supabase-helper";
 import { NextRequest, NextResponse } from "next/server";
 import z from "zod"
 
