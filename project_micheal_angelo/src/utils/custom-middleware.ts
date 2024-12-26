@@ -13,6 +13,7 @@ import z from "zod"
 export interface MiddlewareContext {
     supabaseClient?: SupabaseClient
     user?: User
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     body?: Record<string, any>;
     route: string;
 }
@@ -43,9 +44,11 @@ type HandlerFunction<T extends MiddlewareContext> = (
 export function handlerWithPreconditions<T extends MiddlewareContext>(
     preconditions: Precondition[],
     handler: HandlerFunction<T>,
-    context: MiddlewareContext = { route: "undefined call context" },
+    initialContext?: MiddlewareContext,
 ) {
     return async (request: Request, args: Args): Promise<NextResponse<unknown>> => {
+        let context = structuredClone(initialContext) ?? { route: "undefined call context" }
+
         for (const precondition of preconditions) {
             const result = await precondition(context, request, args)
 
@@ -91,6 +94,7 @@ export async function requireAdmin(context: MiddlewareContext): Promise<Middlewa
     return context as MiddlewareContextWithUser
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function validateBody(schema: z.ZodObject<any>) {
     return async (
         context: MiddlewareContext,
