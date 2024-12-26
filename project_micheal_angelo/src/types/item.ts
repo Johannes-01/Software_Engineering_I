@@ -2,7 +2,7 @@ import { Category } from "./category";
 
 export interface Item {
     id: number;
-    category: Category;
+    categoryId: number;
     title: string;
     artist: string;
     width: number;
