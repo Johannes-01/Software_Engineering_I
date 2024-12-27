@@ -40,18 +40,26 @@ export const GET = handlerWithPreconditions<GetContext>(
             supabaseQuery = supabaseQuery.eq("category_id", category)
         }
 
-        const {
-            data,
-            error,
-            count
-        } = await supabaseQuery.range(paginationIndex * 10, paginationIndex * 10 + 10)
-
+        const { data, error, count } = paginationIndex !== 0
+            ? await supabaseQuery.range(paginationIndex, paginationIndex + 10)
+            : await supabaseQuery;
+ 
         if (error) {
             console.error(`${route} | select -> `, error.message)
             return internalServerError()
         }
 
-        return NextResponse.json({ maxCount: count, images: data }, { status: 200 })
+        const items = data as Item[];
+        
+        items.forEach((item) => {
+            const { data } = supabaseClient
+            .storage
+            .from('images')
+            .getPublicUrl(item.image_path);
+            item.image_path = data.publicUrl;
+        });
+        
+        return NextResponse.json({ maxCount: count, images: items }, { status: 200 })
     },
     {
         route: "/api/image:GET",
@@ -69,7 +77,6 @@ export async function POST(req: NextRequest) {
             const formDataItemData = formData.get("itemData") ?? "";
             const formDataString = formDataItemData.toString();
             itemData = JSON.parse(formDataString) as Item | undefined;
-            console.log(itemData);
         } catch (error) {
             return new NextResponse(
                 `Error while deserializing item and file: ${error}`,
@@ -104,7 +111,7 @@ export async function POST(req: NextRequest) {
 
     // todo validate itemData with zod
     const requiredFields: (keyof Item)[] = [
-        "categoryId",
+        "category_id",
         "title",
         "artist",
         "width",
@@ -184,7 +191,7 @@ export async function POST(req: NextRequest) {
         .from("image")
         .insert([
             {
-                category_id: itemData.categoryId,
+                category_id: itemData.category_id,
                 title: itemData.title,
                 artist: itemData.artist,
                 motive_height: itemData.motive_height,

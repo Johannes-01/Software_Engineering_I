@@ -1,6 +1,4 @@
-export enum Category {
-    "original" = 1,
-    "replica" = 2,
-    "grafic" = 3,
-    "ALL" = "ALL"
+export type Category = { 
+    id: number, 
+    name: string 
 };

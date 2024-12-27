@@ -2,7 +2,7 @@ import { Category } from "./category";
 
 export interface Item {
     id: number;
-    categoryId: number;
+    category_id: number;
     title: string;
     artist: string;
     width: number;
@@ -11,6 +11,7 @@ export interface Item {
     motive_height?: number;
     price: number;
     notice: string;
+    image_path: string;
 }
 
 export interface ItemRequest {

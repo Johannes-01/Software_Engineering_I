@@ -10,7 +10,6 @@ import { Textarea } from "./ui/textarea"
 import {
   Select,
   SelectContent,
-  SelectItem,
   SelectTrigger,
   SelectValue,
 } from "./ui/select"
@@ -28,8 +27,7 @@ import { fromDoubleWithTwoDecimalInt } from '../utils/numberExtension'
   "Frida Kahlo",
 ]*/
 
-export default function ArtworkUpload() 
-{
+export default function ArtworkUpload() {
   const [file, setFile] = useState<File | undefined>(undefined);
   const [formData, setFormData] = useState<ItemRequest>({
     title: '',
@@ -38,7 +36,7 @@ export default function ArtworkUpload()
     width: 0,
     height: 0,
     price: 0,
-    category: Category.original,
+    category: { id: 0, name: "All"},
   });
 
   // const [artistsOpen, setArtistsOpen] = useState(false);
@@ -49,7 +47,7 @@ export default function ArtworkUpload()
     setFile(acceptedFiles[0]);
   }
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: {'image/*': []} })
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: { 'image/*': [] } })
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -61,7 +59,7 @@ export default function ArtworkUpload()
   }*/
 
   const handleSelectCategory = (category: Category) => {
-    setFormData(prev => ({ ...prev, category: category}))
+    setFormData(prev => ({ ...prev, category: category }))
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -72,7 +70,7 @@ export default function ArtworkUpload()
     formData.price = fromDoubleWithTwoDecimalInt(formData.price);
     formData.height = fromDoubleWithTwoDecimalInt(formData.height);
     formData.width = fromDoubleWithTwoDecimalInt(formData.width);
-    
+
     // todo do we need to have both? --> simon?
     formData.motive_height = formData.height;
     formData.motive_width = formData.width;
@@ -86,13 +84,13 @@ export default function ArtworkUpload()
       setLoading(false);
     });
   }
-  
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async function uploadItem(item: ItemRequest) {
     const payload = {
       ...item,
       // Exclude the File from the JSON payload
-      image: undefined 
+      image: undefined
     }
 
     const response = await fetch('/api/image', {
@@ -102,8 +100,8 @@ export default function ArtworkUpload()
       },
       body: JSON.stringify(payload)
     })
-  
-    if(response.ok) {
+
+    if (response.ok) {
       console.log('Success:', response.json());
     } else {
       setError('Failed to upload artwork. Please try again.');
@@ -115,7 +113,7 @@ export default function ArtworkUpload()
     formData.append('file', file);
 
     formData.append('itemData', JSON.stringify({
-      category_id: item.category.toString(),
+      category: item.category.toString(),
       title: item.title,
       artist: item.artist,
       width: item.width.toString(),
@@ -125,13 +123,13 @@ export default function ArtworkUpload()
       motive_height: item.motive_width!.toString(),
       notice: item.notice,
     }));
-    
+
     const response = await fetch('/api/image', {
       method: 'POST',
       body: formData
     });
 
-    if(response.ok) {
+    if (response.ok) {
       console.log('Success:', response.json());
     } else {
       setError('Failed to upload artwork. Please try again.');
@@ -141,12 +139,11 @@ export default function ArtworkUpload()
   return (
     <div className="flex flex-col h-screen bg-background">
       <div className="flex flex-col md:flex-row flex-grow p-6 gap-6">
-      <div className="w-full md:w-1/2 flex flex-col">
+        <div className="w-full md:w-1/2 flex flex-col">
           <div
             {...getRootProps()}
-            className={`flex items-center justify-center w-full h-full border-2 border-dashed rounded-lg cursor-pointer ${
-              isDragActive ? 'border-primary' : 'border-border'
-            }`}
+            className={`flex items-center justify-center w-full h-full border-2 border-dashed rounded-lg cursor-pointer ${isDragActive ? 'border-primary' : 'border-border'
+              }`}
           >
             <input {...getInputProps()} />
             {file ? (
@@ -191,13 +188,13 @@ export default function ArtworkUpload()
             <div>
               <Label htmlFor="artist">Artist</Label>
               <Input
-                  id="artist"
-                  name="artist"
-                  type="text"
-                  value={formData.artist}
-                  onChange={handleInputChange}
-                  required
-                />
+                id="artist"
+                name="artist"
+                type="text"
+                value={formData.artist}
+                onChange={handleInputChange}
+                required
+              />
               {/* <Popover open={artistsOpen} onOpenChange={setArtistsOpen}>
                 <PopoverTrigger asChild>
                   <Button
@@ -279,9 +276,10 @@ export default function ArtworkUpload()
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={Category.original.toString()}>Original</SelectItem>
+                  {/**todo fetch an map categories */}
+                  {/* <SelectItem value={Category.original.toString()}>Original</SelectItem>
                   <SelectItem value={Category.replica.toString()}>Reproduktion</SelectItem>
-                  <SelectItem value={Category.grafic.toString()}>Grafik</SelectItem>
+                  <SelectItem value={Category.grafic.toString()}>Grafik</SelectItem> */}
                 </SelectContent>
               </Select>
             </div>
@@ -292,21 +290,20 @@ export default function ArtworkUpload()
             )}
             {loading ? (
               <div className='flex justify-center items-center'>
-                {/*todo find beter spinner*/}
                 <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className={cn("animate-spin")}
-                  >
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className={cn("animate-spin")}
+                >
                   <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                </svg>              
+                </svg>
               </div>
             ) : (
               <Button type="submit" className="w-full">Create Artwork</Button>

@@ -10,60 +10,84 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "./ui/select"
+} from "./ui/select";
 import { Item } from "../types/item";
 import { Category } from '../types/category';
 
-// Mock data for demonstration
-const images: Array<Item & { imageUrl: string }> = [
-  { id: 1, width: 0, height: 0, title: 'Artwork Title 1', artist: 'John Doe', category: Category.original, notice: 'A short description of the artwork. This piece showcases...', price: 100, imageUrl: 'https://kvhaquacaxdwniozpuhq.supabase.co/storage/v1/object/sign/images/056c37d8-99db-41c5-8a01-9b1668b683ca?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJpbWFnZXMvMDU2YzM3ZDgtOTlkYi00MWM1LThhMDEtOWIxNjY4YjY4M2NhIiwiaWF0IjoxNzMyMjA5NTQ2LCJleHAiOjE3MzI4MTQzNDZ9.Uzsb_oFwE-x031r9I56V_NCwKCrqxudPdtIZpuwfpsc&t=2024-11-21T17%3A19%3A06.633Z' },
-  { id: 2, width: 0, height: 0, title: 'Artwork Title 2', artist: 'Jane Smith', category: Category.replica, notice: 'A short description of the artwork. This piece showcases...', price: 200, imageUrl: '/placeholder.svg' },
-  { id: 3, width: 0, height: 0, title: 'Artwork Title 3', artist: 'Bob Johnson', category: Category.original, notice: 'A short description of the artwork. This piece showcases...', price: 300, imageUrl: '/placeholder.svg' },
-  { id: 4, width: 0, height: 0, title: 'Artwork Title 4', artist: 'Alice Brown', category: Category.grafic, notice: 'A short description of the artwork. This piece showcases...', price: 400, imageUrl: '/placeholder.svg' },
-  { id: 5, width: 0, height: 0, title: 'Artwork Title 5', artist: 'Charlie Green', category: Category.original, notice: 'A short description of the artwork. This piece showcases...', price: 500, imageUrl: '/placeholder.svg' },
-  { id: 6, width: 0, height: 0, title: 'Artwork Title 6', artist: 'Diana White', category: Category.grafic, notice: 'A short description of the artwork. This piece showcases...', price: 600, imageUrl: '/placeholder.svg' },
-  { id: 7, width: 0, height: 0, title: 'Artwork Title 7', artist: 'Diana White', category: Category.replica, notice: 'A short description of the artwork. This piece showcases...', price: 600, imageUrl: '/placeholder.svg' },
-]
-
-// if we want to fetch artists
-// const artists = ['all', 'John Doe', 'Jane Smith', 'Bob Johnson', 'Alice Brown', 'Charlie Green', 'Diana White']
-
 export default function Gallery() {
-  const [filteredImages, setFilteredImages] = React.useState(images)
+  const [items, setItems] = React.useState<Item[] | undefined>();
+  const [currentPage, setCurrentPage] = React.useState(0);
+  const [itemCount, setItemCount] = React.useState(0);
+  const itemsPerPage = 10;
   const [searchTerm, setSearchTerm] = React.useState('')
-  const [categoryFilter, setCategoryFilter] = React.useState<Category>(Category.ALL);
-  const [currentPage, setCurrentPage] = React.useState(1)
-  const itemsPerPage = 6
-  // const [artistFilter, setArtistFilter] = React.useState('All')
+  const [artist, setArtist] = React.useState("")
+
+  const [availableCategories, setAvailableCategories] = React.useState<Category[]>([]);
+  const [categoryFilter, setCategoryFilter] = React.useState<number>(0);
+
+  const fetchImages = async (page?: number, title?: string, category?: number, artist?: string) => {
+    try {
+      const url = new URL("/api/image", window.location.origin);
+      if (page === 0 || page) {
+        url.searchParams.set('p', page.toString());
+        setCurrentPage(page);
+      }
+      if (title) url.searchParams.set('q', title);
+      if (artist) url.searchParams.set('a', artist);
+      if (category) url.searchParams.set('c', category.toString());
+
+      const request: RequestInit = {
+        method: 'GET',
+      };
+
+      const imageResponse = await fetch(url, request);
+      if (!imageResponse.ok) {
+        throw new Error("Could not fetch images.");
+      }
+
+      const response = await imageResponse.json();
+
+      setItemCount(response.maxCount);
+      setItems(response.images);
+    } catch (error) {
+      console.error("Error fetching images:", error);
+    }
+  }
+
+  const fetchCategories = async () => {
+    try {
+      const categoriesResponse = await fetch("/api/category", {
+        method: 'GET'
+      });
+
+      if (!categoriesResponse.ok) {
+        throw new Error("Could not fetch categories.");
+      }
+
+      const categories = await categoriesResponse.json();
+      const allCategories: Category[] = [
+        ...categories,
+      ];
+
+      setAvailableCategories(allCategories);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
 
   React.useEffect(() => {
-    let result = images
-    if (searchTerm) {
-      result = result.filter(img =>
-        img.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        img.notice.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        img.artist.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    }
+    void fetchImages();
+    void fetchCategories();
+  }, []);
 
-    if (categoryFilter && categoryFilter !== Category.ALL) {
-      result = result.filter(img => img.category === categoryFilter)
-    }
+  React.useEffect(() => {
+    void fetchImages(currentPage, '', categoryFilter);
+  }, [currentPage, categoryFilter]);
 
-    /*if (artistFilter !== 'all') {
-      result = result.filter(img => img.artist === artistFilter)
-    }*/
-
-    setFilteredImages(result)
-  }, [searchTerm, categoryFilter])
-
-  const indexOfLastItem = currentPage * itemsPerPage
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage
-  const currentItems = filteredImages.slice(indexOfFirstItem, indexOfLastItem)
-  const totalPages = Math.ceil(filteredImages.length / itemsPerPage)
+  const totalPages = Math.ceil(itemCount / itemsPerPage);
 
   const handlePageChange = (pageNumber: number) => {
-    setCurrentPage(pageNumber)
+    setCurrentPage(pageNumber);
   }
 
   return (
@@ -71,61 +95,61 @@ export default function Gallery() {
       <div className="container mx-auto p-4">
         <h1 className="text-2xl font-bold mb-4">Gallery</h1>
         <div className="flex gap-4 mb-4 w-full">
-          <div className='w-[90%]'>
+          <div className='w-[80%] flex-row flex gap-2'>
             <Input
               placeholder="Search artworks..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="flex-1"
             />
+            <Input
+                placeholder={"Search for artist..."}
+                value={artist}
+                onChange={(e) => setArtist(e.target.value)}
+                className={"flex-1"}
+            />
           </div>
-          {/*<div className='w-[10%]'>
-        <Select value={artistFilter} onValueChange={setArtistFilter}>
-          <SelectTrigger>
-            <SelectValue placeholder="Artist" />
-          </SelectTrigger>
-          <SelectContent>
-            {artists.map((artist) => (
-              <SelectItem key={artist} value={artist}>
-                {artist}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        </div> */}
-          <div className='w-[10%]'>
+          <div className='w-[15%]'>
             <Select onValueChange={(value: string) => {
-              const numValue = value === Category.ALL.toString()
-                ? Category.ALL
-                : Number(value) as Category;
-              setCategoryFilter(numValue);
+              const id = Number(value);
+              const selectedCategory = availableCategories.find(category => category.id === id);
+              setCategoryFilter(selectedCategory?.id ?? 0);
             }}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {Object.entries(Category)
-                  .filter(([value]) => !isNaN(Number(value)))
-                  .map(([key, value]) => (
+                <SelectItem key={0} value="all">All Categories</SelectItem>
+                {Object.entries(availableCategories)
+                  .map(([, value]) => (
                     <SelectItem
-                      key={key}
-                      value={key}
+                      key={value.id}
+                      value={value.id.toString()}
                     >
-                      {String(value.toString()).charAt(0).toLocaleUpperCase() + String(value.toString()).slice(1)}
+                      {String(value.name).charAt(0).toLocaleUpperCase() + String(value.name).slice(1)}
                     </SelectItem>
                   ))}
               </SelectContent>
             </Select>
           </div>
+          <div className='w-[5%]'>
+            <Button
+              className='w-full'
+              onClick={() => {
+                void fetchImages(0, searchTerm, categoryFilter, artist);
+              }}
+            >
+              Search
+            </Button>
+          </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {currentItems.map((image) => (
+          {items !== undefined && items.map((image) => (
             <Card key={image.id}>
               <CardContent className="p-4">
                 {/*eslint-disable-next-line @next/next/no-img-element*/}
                 <img
-                  src={image.imageUrl}
+                  src={image.image_path}
                   alt={image.title}
                   width={300}
                   height={400}
@@ -143,12 +167,12 @@ export default function Gallery() {
         </div>
 
       </div>
-      {filteredImages.length > itemsPerPage && (
-        <div className="flex justify-center mt-4 fixed bottom-0 w-full mb-8">
+      {currentPage !== totalPages && (
+        <div className="flex justify-center mt-4 w-full mb-8">
           <Button
             className='bg-white text-black hover:bg-white outline-1 hover:outline m-1'
             onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
+            disabled={currentPage === 0}
           >
             {"< Previous"}
           </Button>
@@ -156,15 +180,15 @@ export default function Gallery() {
             <Button
               variant={'outline'}
               key={index}
-              onClick={() => handlePageChange(index + 1)}
-              className={currentPage === index + 1 ? 'bg-white hover:bg-white text-black outline outline-1 m-1' : 'bg-white hover:bg-white text-black outline-1 hover:outline m-1'}
+              onClick={() => handlePageChange(index)}
+              className={currentPage === index ? 'bg-white hover:bg-white text-black outline outline-1 m-1' : 'bg-white hover:bg-white text-black outline-1 hover:outline m-1'}
             >
               {index + 1}
             </Button>
           ))}
           <Button
             onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
+            disabled={currentPage === totalPages - 1}
             className='bg-white text-black hover:bg-white outline-1 hover:outline m-1'
           >
             {"Next >"}
