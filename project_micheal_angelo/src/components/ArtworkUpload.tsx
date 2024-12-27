@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { Check, ChevronsUpDown, Upload } from 'lucide-react'
+import { Upload } from 'lucide-react'
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Label } from "./ui/label"
@@ -14,34 +14,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "./ui/command"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "./ui/popover"
 import { cn } from "@utils/tailwind-merge-styles";
 import { Item } from '../types/item'
 import { Category } from '../types/category'
 import { fromDoubleWithTwoDecimalInt } from '../utils/numberExtension'
 
-// todo free text or artist table?
-const artists = [
+// if we want to fetch artists later on
+/*const artists = [
   "Pablo Picasso",
   "Vincent van Gogh",
   "Leonardo da Vinci",
   "Claude Monet",
   "Frida Kahlo",
-]
+]*/
 
-export default function ArtworkUpload() {
-
+export default function ArtworkUpload() 
+{
+  const [file, setFile] = useState<File | undefined>(undefined);
   const [formData, setFormData] = useState<Item>({
     title: '',
     notice: '',
@@ -52,12 +41,12 @@ export default function ArtworkUpload() {
     category_id: Category.original,
   });
 
-  const [artistsOpen, setArtistsOpen] = useState(false);
+  // const [artistsOpen, setArtistsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
 
   const onDrop = (acceptedFiles: File[]) => {
-    setFormData(prev => ({ ...prev, image: acceptedFiles[0]}))
+    setFile(acceptedFiles[0]);
   }
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: {'image/*': []} })
@@ -67,9 +56,9 @@ export default function ArtworkUpload() {
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleSelectChange = (name: string, value: string) => {
+  /*const handleSelectChange = (name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }))
-  }
+  }*/
 
   const handleSelectCategory = (category: Category) => {
     setFormData(prev => ({ ...prev, category_id: category}))
@@ -79,35 +68,74 @@ export default function ArtworkUpload() {
     e.preventDefault();
     setError("");
     setLoading(true);
+
+    formData.price = fromDoubleWithTwoDecimalInt(formData.price);
+    formData.height = fromDoubleWithTwoDecimalInt(formData.height);
+    formData.width = fromDoubleWithTwoDecimalInt(formData.width);
     
-    if (!formData.image) {
+    // todo do we need to have both? --> simon?
+    formData.motive_height = formData.height;
+    formData.motive_width = formData.width;
+
+    if (!file) {
       setError("Please upload an artwork");
       return;
     }
 
-    const request = formData;
-    request.price = fromDoubleWithTwoDecimalInt(formData.price);
-    request.height = fromDoubleWithTwoDecimalInt(formData.height);
-    request.width = fromDoubleWithTwoDecimalInt(formData.width);
-    
-    // todo do we need to have both? --> simon?
-    request.motive_height = formData.height;
-    request.motive_width = formData.width;
-
-    fetch('/api/image', {
-      method: 'POST',
-      body: JSON.stringify(request),
-    })
-    .then(response => response.json())
-    .then(data => {
-      console.log('Success:', data);
-      setLoading(false);
-      // todo handle success (e.g., redirect or show success message)
-    })
-    .catch(() => {
-      setError('Failed to upload artwork. Please try again.');
+    uploadItemWithFile(formData, file).then(() => {
       setLoading(false);
     });
+  }
+  
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async function uploadItem(item: Item) {
+    const payload = {
+      ...item,
+      // Exclude the File from the JSON payload
+      image: undefined 
+    }
+
+    const response = await fetch('/api/image', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    })
+  
+    if(response.ok) {
+      console.log('Success:', response.json());
+    } else {
+      setError('Failed to upload artwork. Please try again.');
+    }
+  }
+
+  async function uploadItemWithFile(item: Item, file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    formData.append('itemData', JSON.stringify({
+      category_id: item.category_id.toString(),
+      title: item.title,
+      artist: item.artist,
+      width: item.width.toString(),
+      height: item.height.toString(),
+      price: item.price.toString(),
+      motive_width: item.motive_width!.toString(),
+      motive_height: item.motive_width!.toString(),
+      notice: item.notice,
+    }));
+    
+    const response = await fetch('/api/image', {
+      method: 'POST',
+      body: formData
+    });
+
+    if(response.ok) {
+      console.log('Success:', response.json());
+    } else {
+      setError('Failed to upload artwork. Please try again.');
+    }
   }
 
   return (
@@ -121,9 +149,10 @@ export default function ArtworkUpload() {
             }`}
           >
             <input {...getInputProps()} />
-            {formData.image ? (
+            {file ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={URL.createObjectURL(formData.image)}
+                src={URL.createObjectURL(file)}
                 alt="Uploaded artwork"
                 className="max-w-full max-h-full object-contain"
               />
@@ -161,7 +190,15 @@ export default function ArtworkUpload() {
             </div>
             <div>
               <Label htmlFor="artist">Artist</Label>
-              <Popover open={artistsOpen} onOpenChange={setArtistsOpen}>
+              <Input
+                  id="artist"
+                  name="artist"
+                  type="text"
+                  value={formData.artist}
+                  onChange={handleInputChange}
+                  required
+                />
+              {/* <Popover open={artistsOpen} onOpenChange={setArtistsOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
@@ -198,7 +235,7 @@ export default function ArtworkUpload() {
                     </CommandGroup>
                   </Command>
                 </PopoverContent>
-              </Popover>
+              </Popover> */}
             </div>
             <div className="flex gap-4">
               <div className="w-1/2">
