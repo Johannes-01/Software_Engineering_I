@@ -18,7 +18,7 @@ export interface MiddlewareContext {
     route: string;
 }
 
-interface RequireAdminMiddlewareContext extends MiddlewareContext {
+interface MiddlewareContextWithUser extends MiddlewareContext {
     supabaseClient: SupabaseClient
     user: User
 }
@@ -63,7 +63,20 @@ export function handlerWithPreconditions<T extends MiddlewareContext>(
     }
 }
 
-export async function requireAdmin(context: MiddlewareContext): Promise<RequireAdminMiddlewareContext | NextResponse> {
+export async function requireUser(context: MiddlewareContext): Promise<MiddlewareContextWithUser | NextResponse> {
+    context.supabaseClient ??= await createSupabaseClient()
+
+    context.user ??= (await context.supabaseClient.auth.getUser()).data.user as User | undefined
+
+    if (!context.user) {
+        console.error(`${context.route} | user needs to be logged in`)
+        return unauthorizedError();
+    }
+
+    return context as MiddlewareContextWithUser
+}
+
+export async function requireAdmin(context: MiddlewareContext): Promise<MiddlewareContextWithUser | NextResponse> {
     context.supabaseClient ??= await createSupabaseClient()
 
     context.user ??= (await context.supabaseClient.auth.getUser()).data.user as User | undefined
@@ -78,7 +91,7 @@ export async function requireAdmin(context: MiddlewareContext): Promise<RequireA
         return forbiddenError()
     }
 
-    return context as RequireAdminMiddlewareContext
+    return context as MiddlewareContextWithUser
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
