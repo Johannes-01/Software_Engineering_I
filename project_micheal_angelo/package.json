@@ -30,7 +30,8 @@
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.23.8",
-    "uuid": "^11.0.3"
+    "uuid": "^11.0.3",
+    "swr": "2.2.5"
   },
   "devDependencies": {
     "@testing-library/react": "^16.0.1",
