@@ -21,5 +21,5 @@ export function conflictError(reason: string = "Resource does already exist") {
 }
 
 export function notFoundError(message?: string) {
-    return NextResponse.json({ message: message ?? "Could not find the specified item" }, { status: 400 });
+    return NextResponse.json({ message: message ?? "Could not find the specified item" }, { status: 404 });
 }
