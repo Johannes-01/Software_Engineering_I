@@ -100,7 +100,7 @@ describe("custom middleware", () => {
                 })
             } as any)
 
-            const response = await requireExists("table", "tableKey", "value")({} as any)
+            const response = await requireExists("table", { key: "value"})({} as any)
 
             expect((response as NextResponse).status).toEqual(404)
         })
@@ -114,7 +114,7 @@ describe("custom middleware", () => {
                 })
             } as any)
 
-            const response = await requireExists("table", "tableKey", "value")({ contextElement: true } as any)
+            const response = await requireExists("table", { key: "value" })({ contextElement: true } as any)
 
             expect((response as any).contextElement).toBeDefined()
         })
