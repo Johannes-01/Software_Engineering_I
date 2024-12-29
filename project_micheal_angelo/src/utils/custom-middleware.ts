@@ -136,10 +136,10 @@ export function requireUnique(table: string, keyValuePair: Record<string, string
     return async (context: MiddlewareContext) => {
         context.supabaseClient ??= await createSupabaseClient()
 
-        const selectCall = context.supabaseClient.from(table).select()
+        let selectCall = context.supabaseClient.from(table).select()
 
         for (const pair of Object.entries(keyValuePair)) {
-            selectCall.eq(pair[0], pair[1])
+            selectCall = selectCall.eq(pair[0], pair[1])
         }
 
         const {
