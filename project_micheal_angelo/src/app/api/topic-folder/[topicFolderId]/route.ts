@@ -48,14 +48,12 @@ const postBody = z.object({
 
 const imageIdShouldExist = async (context: MiddlewareContext) => requireExists(
     "image",
-    "id",
-    context.body!.imageId
+    { id: context.body!.imageId }
 )(context)
 
 const topicFolderShouldExist = async (context: MiddlewareContext, _: unknown, { params }: Slug) => requireExists(
     "topic_folder",
-    "id",
-    params.topicFolderId
+    { id: params.topicFolderId }
 )(context)
 
 const imageShouldNotAlreadyExistInTopicFolder = async (context: MiddlewareContext, _: unknown, { params }: Slug) => requireUnique(
