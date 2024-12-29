@@ -23,21 +23,15 @@ interface MiddlewareContextWithUser extends MiddlewareContext {
     user: User
 }
 
-type Request = NextRequest
-type Args = {
-    params: {
-        categoryId: string,
-    }
-}
-
 type Precondition = (
     context: MiddlewareContext,
     request: NextRequest,
-    args: Args,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    args: any,
 ) => Promise<MiddlewareContext | NextResponse>
 type HandlerFunction<T extends MiddlewareContext> = (
     context: T,
-    request: Request,
+    request: NextRequest,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     args: any,
 ) => Promise<NextResponse<unknown>>
@@ -47,7 +41,8 @@ export function handlerWithPreconditions<T extends MiddlewareContext>(
     handler: HandlerFunction<T>,
     initialContext?: MiddlewareContext,
 ) {
-    return async (request: Request, args: Args): Promise<NextResponse<unknown>> => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return async (request: NextRequest, args: any): Promise<NextResponse<unknown>> => {
         let context = structuredClone(initialContext) ?? { route: "undefined call context" }
 
         for (const precondition of preconditions) {
@@ -137,14 +132,20 @@ export function requireExists(table: string, tableKey: string, value: string) {
     }
 }
 
-export function requireUnique(table: string, columnKey: string, value: string) {
+export function requireUnique(table: string, keyValuePair: Record<string, string>) {
     return async (context: MiddlewareContext) => {
         context.supabaseClient ??= await createSupabaseClient()
+
+        const selectCall = context.supabaseClient.from(table).select()
+
+        for (const pair of Object.entries(keyValuePair)) {
+            selectCall.eq(pair[0], pair[1])
+        }
 
         const {
             data: valueAlreadyExists,
             error: selectNameError,
-        } = await context.supabaseClient.from(table).select(columnKey).eq(columnKey, value)
+        } = await selectCall
 
         if (selectNameError) {
             console.error(`${context.route} | unexpected supabase error when checking for unique item -> `, selectNameError.message)
