@@ -15,6 +15,7 @@ import { Item } from "../types/item";
 import { Category } from '../types/category';
 import useSWR from "swr";
 import { Edit2, Trash } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 interface UserInformation {
   isAdmin: boolean
@@ -27,6 +28,7 @@ interface Users {
 }
 
 export default function Gallery() {
+  const router = useRouter()
   const [items, setItems] = React.useState<Item[] | undefined>();
   const [currentPage, setCurrentPage] = React.useState(0);
   const [itemCount, setItemCount] = React.useState(0);
@@ -42,7 +44,7 @@ export default function Gallery() {
 
   const [availableCategories, setAvailableCategories] = React.useState<Category[]>([]);
   const [categoryFilter, setCategoryFilter] = React.useState<number>(0);
-  const [selectedUser, setSelectedUser] = React.useState<string | undefined>(undefined)
+  const [selectedUser, setSelectedUser] = React.useState<Users | undefined>(undefined)
   const [cardHovered, setCardHovered] = React.useState<any | undefined>(undefined)
 
   const fetchImages = async (page?: number, title?: string, category?: number, artist?: string) => {
@@ -167,11 +169,7 @@ export default function Gallery() {
             {(!!userInformation && userInformation.isAdmin) && <div className={"w-full flex justify-between"}>
               <div className='w-[15%]'>
                 {!!users && <Select onValueChange={(value: string) => {
-                  if (value === "no") {
-                    setSelectedUser(undefined)
-                  }
-
-                  setSelectedUser(value)
+                  setSelectedUser(users.find(user => user.id === value))
                 }}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Kein Nutzer"/>
@@ -236,6 +234,7 @@ export default function Gallery() {
                       <Button
                           disabled={selectedUser === undefined}
                           onClick={() => {
+                            router.push(`/gallery/configure/${image.id}?userId=${selectedUser!.id}`)
                           }}
                       >
                         Konfigurieren
