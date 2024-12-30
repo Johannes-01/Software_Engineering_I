@@ -5,8 +5,8 @@ import {
     internalServerError,
     notFoundError,
     unauthorizedError,
-} from "@utils/server-errors";
-import { createSupabaseClient } from "@utils/supabase-helper";
+} from "../utils/server-errors";
+import { createSupabaseClient } from "../utils/supabase-helper";
 import { NextRequest, NextResponse } from "next/server";
 import z from "zod"
 
@@ -23,22 +23,17 @@ interface MiddlewareContextWithUser extends MiddlewareContext {
     user: User
 }
 
-type Request = NextRequest
-type Args = {
-    params: {
-        categoryId: string,
-    }
-}
-
 type Precondition = (
     context: MiddlewareContext,
     request: NextRequest,
-    args: Args,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    args: any,
 ) => Promise<MiddlewareContext | NextResponse>
 type HandlerFunction<T extends MiddlewareContext> = (
     context: T,
-    request: Request,
-    args: Args,
+    request: NextRequest,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    args: any,
 ) => Promise<NextResponse<unknown>>
 
 export function handlerWithPreconditions<T extends MiddlewareContext>(
@@ -46,7 +41,8 @@ export function handlerWithPreconditions<T extends MiddlewareContext>(
     handler: HandlerFunction<T>,
     initialContext?: MiddlewareContext,
 ) {
-    return async (request: Request, args: Args): Promise<NextResponse<unknown>> => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return async (request: NextRequest, args: any): Promise<NextResponse<unknown>> => {
         let context = structuredClone(initialContext) ?? { route: "undefined call context" }
 
         for (const precondition of preconditions) {
@@ -106,21 +102,27 @@ export function validateBody(schema: z.ZodObject<any>) {
 
         if (error) {
             console.error(`${context.route} | route called with invalid body`)
-            return badRequestError(error.message)
+            return badRequestError(JSON.parse(error.message))
         }
 
         return context
     }
 }
 
-export function requireExists(table: string, tableKey: string, value: string) {
+export function requireExists(table: string, values: Record<string, unknown>) {
     return async (context: MiddlewareContext) => {
         context.supabaseClient ??= await createSupabaseClient()
+
+        let selectCall = context.supabaseClient.from(table).select()
+
+        for (const pair of Object.entries(values)) {
+            selectCall = selectCall.eq(pair[0], pair[1])
+        }
 
         const {
             data: idMatch,
             error: selectError,
-        } = await context.supabaseClient.from(table).select(tableKey).eq(tableKey, value);
+        } = await selectCall
 
         if (selectError) {
             console.error(`${context.route} | unexpected supabase error when checking if value exists -> `, selectError.message);
@@ -129,21 +131,27 @@ export function requireExists(table: string, tableKey: string, value: string) {
 
         if (!idMatch || idMatch.length === 0) {
             console.error(`${context.route} | `)
-            return notFoundError(`Could not find value of ${value} inside ${tableKey} of ${table}`);
+            return notFoundError(`Could not find key value kombination ${Object.entries(values).flat().join(" ")} of ${table}`);
         }
 
         return context;
     }
 }
 
-export function requireUnique(table: string, columnKey: string, value: string) {
+export function requireUnique(table: string, keyValuePair: Record<string, string>) {
     return async (context: MiddlewareContext) => {
         context.supabaseClient ??= await createSupabaseClient()
+
+        let selectCall = context.supabaseClient.from(table).select()
+
+        for (const pair of Object.entries(keyValuePair)) {
+            selectCall = selectCall.eq(pair[0], pair[1])
+        }
 
         const {
             data: valueAlreadyExists,
             error: selectNameError,
-        } = await context.supabaseClient.from(table).select(columnKey).eq(columnKey, value)
+        } = await selectCall
 
         if (selectNameError) {
             console.error(`${context.route} | unexpected supabase error when checking for unique item -> `, selectNameError.message)
