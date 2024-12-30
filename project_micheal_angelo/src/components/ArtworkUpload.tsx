@@ -36,7 +36,7 @@ export default function ArtworkUpload() {
     width: 0,
     height: 0,
     price: 0,
-    category: { id: 0, name: "All"},
+    category_id: { id: 0, name: "All"},
   });
 
   // const [artistsOpen, setArtistsOpen] = useState(false);
@@ -59,7 +59,7 @@ export default function ArtworkUpload() {
   }*/
 
   const handleSelectCategory = (category: Category) => {
-    setFormData(prev => ({ ...prev, category: category }))
+    setFormData(prev => ({ ...prev, category_id: category }))
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -113,7 +113,7 @@ export default function ArtworkUpload() {
     formData.append('file', file);
 
     formData.append('itemData', JSON.stringify({
-      category: item.category.toString(),
+      category: item.category_id.toString(),
       title: item.title,
       artist: item.artist,
       width: item.width.toString(),
@@ -271,7 +271,7 @@ export default function ArtworkUpload() {
             </div>
             <div>
               <Label htmlFor="category_id">Category</Label>
-              <Select onValueChange={(value: string) => handleSelectCategory(value as unknown as Category)} value={formData.category.toString()}>
+              <Select onValueChange={(value: string) => handleSelectCategory(value as unknown as Category)} value={formData.category_id.toString()}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>

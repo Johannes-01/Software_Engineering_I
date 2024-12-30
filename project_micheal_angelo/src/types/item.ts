@@ -1,4 +1,4 @@
-import { Category } from "./category";
+import { Category as string } from "./category";
 
 export interface Item {
     id: number;
@@ -15,7 +15,7 @@ export interface Item {
 }
 
 export interface ItemRequest {
-    category: Category;
+    category_id: number;
     title: string;
     artist: string;
     width: number;
