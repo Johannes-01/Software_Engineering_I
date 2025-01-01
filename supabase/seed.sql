@@ -79,7 +79,7 @@ values ('Van Gogh', 'Sammlung von allen Van Gogh Bildern'),
        ('Lieblinsbilder', null);
 
 insert into public.image
-(category, title, artist, motive_height, motive_width, height, width, price, notice, image_path)
+(category_id, title, artist, motive_height, motive_width, height, width, price, notice, image_path)
 values (2, 'Sternennacht', 'Vincent van Gogh', 40, 30, 40, 30, 150000000,
         'Sternennacht ist eines der bekanntesten Gemälde des niederländischen Künstlers Vincent van Gogh.',
         '8fc7c988-8be2-4e7b-bca2-ba6576cb0f05.jpg'),
