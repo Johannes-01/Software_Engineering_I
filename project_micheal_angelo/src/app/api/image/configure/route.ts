@@ -18,6 +18,18 @@ const bodySchema = z.object({
     imageId: z.string(),
 })
 
+export const GET = handlerWithPreconditions(
+    [requireUser],
+    async () => {
+        return NextResponse.json(
+            {
+                strip: ["20mm Gold", "50mm Gold"],
+                pallet:  ["White", "Black"],
+            }
+        )
+    }
+)
+
 export const POST = handlerWithPreconditions<GetContext>(
     [requireUser, validateBody(bodySchema)],
     async ({ supabaseClient, user, body }, _, { params }: { params: { userId: string }}) => {
