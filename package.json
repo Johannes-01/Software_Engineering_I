@@ -9,7 +9,9 @@
     "install-database": "cd supabase && npm i",
     "supabase": "npx supabase@latest start && npm run seed-images",
     "dev": "cd project_micheal_angelo && npm run dev",
-    "seed-images": "cd supabase && node seed-images.js"
+    "build": "cd project_micheal_angelo && npm run build",
+    "seed-images": "cd supabase && node seed-images.js",
+    "test": "cd project_micheal_angelo && npm run test"
   },
   "keywords": [],
   "author": "",
@@ -17,6 +19,10 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.46.1",
     "@types/mime-types": "^2.1.4",
+    "react-icons": "^5.4.0",
     "setup": "^0.0.3"
+  },
+  "devDependencies": {
+    "vite-tsconfig-paths": "^5.1.3"
   }
 }

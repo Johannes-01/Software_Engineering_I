@@ -42,7 +42,7 @@ values ('00000000-0000-0000-0000-000000000000',
         current_timestamp,
         current_timestamp,
         '{"provider":"email","providers":["email"]}',
-        '{}',
+        '{"role": "admin"}',
         current_timestamp,
         current_timestamp,
         '',
@@ -109,5 +109,4 @@ values ('dark brown', 'gold 30cm', '5f2550bc-ba48-45d0-8e01-de7a2ca246c2', 1, fa
 
 insert into storage.buckets
     (id, name, created_at, updated_at, public, avif_autodetection, allowed_mime_types)
-values ('images', 'images', current_timestamp, current_timestamp, FALSE, FALSE, ARRAY['image/*']);
-
+values ('images', 'images', current_timestamp, current_timestamp, TRUE, FALSE, ARRAY['image/*']);
