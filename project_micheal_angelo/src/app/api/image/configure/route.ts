@@ -1,10 +1,16 @@
 'use server';
 
 import { NextResponse } from "next/server";
+import { handlerWithPreconditions, requireUser } from "@utils/custom-middleware";
 
-export async function GET() {
-    // const supabase = await createClient();
-    return new NextResponse('success', {
-        status: 200,
-    });
-}
+export const GET = handlerWithPreconditions(
+    [requireUser],
+    async () => {
+        return NextResponse.json(
+            {
+                strip: ["20mm Gold", "50mm Gold"],
+                pallet:  ["White", "Black"],
+            }
+        )
+    }
+)
