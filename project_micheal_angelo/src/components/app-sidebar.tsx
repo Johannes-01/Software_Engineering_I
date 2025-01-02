@@ -1,41 +1,26 @@
 import { Home, Inbox, Calendar, Search, Settings } from "lucide-react"
 import {
     Sidebar,
-    SidebarContent,
+    SidebarContent, SidebarFooter,
     SidebarGroup,
     SidebarGroupContent,
     SidebarGroupLabel,
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
-  } from "../components/ui/sidebar"
+} from "../components/ui/sidebar"
   
 // Menu items.
 const items = [
     {
-      title: "Home",
-      url: "#",
-      icon: Home,
-    },
-    {
-      title: "Inbox",
+      title: "Gallery",
       url: "#",
       icon: Inbox,
     },
     {
-      title: "Calendar",
+      title: "Save",
       url: "#",
       icon: Calendar,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: Search,
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings,
     },
   ]
    
@@ -44,7 +29,6 @@ const items = [
       <Sidebar>
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupLabel>username</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {items.map((item) => (
@@ -61,6 +45,7 @@ const items = [
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
+          <SidebarFooter>Logout</SidebarFooter>
       </Sidebar>
     )
   }
