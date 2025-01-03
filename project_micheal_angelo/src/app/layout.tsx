@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
-import "./globals.css";
-import { AppSidebar } from "../components/app-sidebar";
-import { SidebarProvider } from "../components/ui/sidebar";
+import "./global.css";
 
 export const metadata: Metadata = {
     title: "Project Micheal Angelo",
@@ -16,12 +14,7 @@ export default function RootLayout({
     return (
         <html lang="en">
         <body>
-            <SidebarProvider>
-            <AppSidebar/>
-            <main className="w-full">
             {children}
-            </main>
-            </SidebarProvider>
         </body>
         </html>
     );
