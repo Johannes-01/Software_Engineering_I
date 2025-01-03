@@ -45,8 +45,6 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
                     {userInformation.isAdmin && <Link href={"/categories"}>
                         <Button className={"w-full"} variant={"ghost"}>Kategorien</Button>
                     </Link>}
-
-
                 </div>
                 <Button onClick={() => {
                     deleteCookie("sb-127-auth-token")
