@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import useSWR from "swr";
-import { Topic } from "../../../types/topic";
+import { Topic } from "@type/topic";
 import Link from "next/link";
 import { Edit, Trash2, Plus } from "lucide-react"
 import { createPortal } from "react-dom";
