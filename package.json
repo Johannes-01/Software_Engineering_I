@@ -19,6 +19,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.46.1",
     "@types/mime-types": "^2.1.4",
+    "react-icons": "^5.4.0",
     "setup": "^0.0.3"
   },
   "devDependencies": {
