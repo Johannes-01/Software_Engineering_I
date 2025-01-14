@@ -8,11 +8,13 @@ import Link from "next/link";
 interface GalleryCardProps {
     image: Item;
     userId: string | undefined;
+    deleteCard: (imageId: number) => void;
 }
 
 const GalleryCard: React.FC<GalleryCardProps> = ({
     image,
     userId,
+    deleteCard,
 }) => {
     const [isHovered, setIsHovered] = useState<boolean>(false)
 
@@ -30,8 +32,7 @@ const GalleryCard: React.FC<GalleryCardProps> = ({
                             <Button
                                 className="bg-red-500 hover:bg-red-600"
                                 onClick={() => {
-                                    // Handle delete action
-                                    // e.g., deleteImage(image.id);
+                                    deleteCard(image.id)
                                 }}
                             >
                                 <Trash className="text-white"/>
