@@ -61,6 +61,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
         return `/api/image?${params.toString()}`;
     };
 
+    console.log(selectedCategory)
+
     return (
         <div className={"w-full"}>
             <div className="flex gap-4 mb-2 w-full">
@@ -85,7 +87,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                             <SelectValue placeholder="Category"/>
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="0">All Categories</SelectItem>
+                            <SelectItem value="0">Alle</SelectItem>
                             {availableCategories?.map((category) => (
                                 <SelectItem
                                     key={category.id}
