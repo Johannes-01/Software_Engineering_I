@@ -4,7 +4,7 @@ import React from "react";
 import { Button } from "@components/ui/button";
 import { deleteCookie } from "cookies-next"
 import { useRouter } from "next/navigation";
-import useSWR from "swr"
+import useSWRImmutable from "swr/immutable"
 import Link from "next/link";
 
 interface UserData {
@@ -14,13 +14,13 @@ interface UserData {
 
 export default function Sidebar({ children }: { children: React.ReactNode }) {
     const router = useRouter()
-    const { data: userInformation } = useSWR<UserData>("api/get-user-information", async (url: string) => {
+    const { data: userInformation } = useSWRImmutable<UserData>("/api/get-user-information", async (url: string) => {
         try {
             return await (await fetch(url)).json()
         } catch {
             return false
         }
-    })
+    }, { keepPreviousData: true })
 
     if (userInformation === undefined) {
         return null
