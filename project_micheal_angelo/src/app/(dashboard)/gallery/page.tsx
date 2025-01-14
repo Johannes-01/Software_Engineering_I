@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import useSWR from "swr";
+import useSWRImmutable from "swr/immutable";
 import { useRouter } from "next/navigation";
 
 import SearchBar from "./_local/search-bar";
@@ -42,8 +43,8 @@ export default function Gallery() {
     const [selectedUser, setSelectedUser] = React.useState<User | undefined>(undefined);
     const [currentPage, setCurrentPage] = React.useState(0);
 
-    const { data: userInformation } = useSWR<UserInformation>("api/get-user-information", fetcher);
-    const { data: users } = useSWR<User[]>("api/user", fetcher);
+    const { data: userInformation } = useSWRImmutable<UserInformation>("api/get-user-information", fetcher);
+    const { data: users } = useSWRImmutable<User[]>("api/users", fetcher);
 
     const { data: imageData } = useSWR<ImageResponse>(
         imageQuery,
