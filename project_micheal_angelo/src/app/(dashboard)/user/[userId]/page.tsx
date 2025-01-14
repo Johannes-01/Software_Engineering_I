@@ -13,6 +13,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@components/ui/dialog";
+import { toast } from "sonner"
 
 export default function Page() {
     const { userId } = useParams<{ userId: string }>();
@@ -41,7 +42,14 @@ export default function Page() {
         <div className="p-6">
             <div className={"flex w-full justify-between mb-6"}>
                 <h3 className="font-bold text-3xl">Gesamt: {totalCost.toFixed(2)}€</h3>
-                <Button disabled={totalCost < 1}>
+                <Button
+                    disabled={totalCost < 1}
+                    onClick={() => {
+                        fetch("/api/whatthecommit")
+                            .then(async (response) => await response.json())
+                            .then((response) => toast(response.commitMessage))
+                    }}
+                >
                     Termin vereinbaren
                 </Button>
             </div>

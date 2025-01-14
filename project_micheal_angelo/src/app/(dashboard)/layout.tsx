@@ -6,6 +6,7 @@ import { deleteCookie } from "cookies-next"
 import { useRouter } from "next/navigation";
 import useSWRImmutable from "swr/immutable"
 import Link from "next/link";
+import { Toaster } from "@components/ui/sonner";
 
 interface UserData {
     isAdmin: boolean
@@ -54,6 +55,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
             <div className={"overflow-y-auto w-full"}>
                 {children}
             </div>
+            <Toaster></Toaster>
         </div>
     );
 }
