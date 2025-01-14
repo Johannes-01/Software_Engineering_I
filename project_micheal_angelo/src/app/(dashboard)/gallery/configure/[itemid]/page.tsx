@@ -14,6 +14,10 @@ interface ConfigurationOptions {
     strip: string[]
 }
 
+const fetcher = async (url: string) => {
+    return await (await fetch(url)).json()
+}
+
 export default function ConfigureArtworkPage() {
     const { itemid } = useParams();
     const searchParams = useSearchParams()
@@ -23,17 +27,9 @@ export default function ConfigureArtworkPage() {
     const [strip, setStrip] = useState<string | undefined>(undefined)
     const [passepartout, setPassepartout] = useState<boolean>(false)
 
-    const { data: image } = useSWR<Item>(`/api/image/${itemid}`, async (url: string) => {
-        return await (await fetch(url)).json()
-    })
-
-    const { data: configurationOptions } = useSWR<ConfigurationOptions>("/api/image/configure", async (url: string) => {
-        return await (await fetch(url)).json()
-    })
-
-    const { data: categories } = useSWR("/api/category", async (url: string) => {
-        return await (await fetch(url)).json()
-    })
+    const { data: image } = useSWR<Item>(`/api/image/${itemid}`, fetcher)
+    const { data: configurationOptions } = useSWR<ConfigurationOptions>("/api/image/configure", fetcher)
+    const { data: categories } = useSWR("/api/category", fetcher)
 
     const userId = searchParams.get("userId")
 
@@ -47,8 +43,8 @@ export default function ConfigureArtworkPage() {
     return (
         <div className={"flex flex-col p-6 gap-12"}>
             <h1 className={"text-2xl font-semibold"}>Bildkonfigurator</h1>
-            <div className={"flex"}>
-                <img src={image.image_path} className={"w-1/2"}/>
+            <div className={"flex gap-4"}>
+                <img src={image.image_path} className={"w-1/2 rounded"}/>
                 <div className={"flex flex-col w-1/2 gap-4"}>
                     <div>
                         <h2 className={"text-3xl font-bold"}>{image.title}</h2>
