@@ -41,14 +41,10 @@ export default function ConfigureArtworkPage() {
             return
         }
 
-        console.log(existingConfiguration)
-
         setPallet(existingConfiguration.pallet ?? undefined)
         setStrip(existingConfiguration.strip ?? undefined)
         setPassepartout(existingConfiguration.passepartout)
     }, [existingConfiguration])
-
-    console.log(pallet, strip, passepartout)
 
     if (!image || !configurationOptions || !categories) {
         return null
