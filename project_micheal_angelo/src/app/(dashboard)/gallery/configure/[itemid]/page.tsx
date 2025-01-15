@@ -50,6 +50,8 @@ export default function ConfigureArtworkPage() {
         return null
     }
 
+    const calculatedPrice = (image.price + (strip ? image.price * 0.15 : 0)) / 100
+
     // eslint-ignore-next-line
     const category = categories.find((category: any) => category.id === image.category_id)
 
@@ -70,7 +72,7 @@ export default function ConfigureArtworkPage() {
                     <hr/>
                     <div>
                         <p>Kategorie: {category.name}</p>
-                        <p>Preis: {(image.price / 100).toFixed(2)}€</p>
+                        <p>Preis: {calculatedPrice.toFixed(2)}€</p>
                     </div>
                     <hr/>
                     <div>

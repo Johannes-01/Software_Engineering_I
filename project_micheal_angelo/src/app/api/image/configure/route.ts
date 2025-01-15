@@ -8,8 +8,8 @@ export const GET = handlerWithPreconditions(
     async () => {
         return NextResponse.json(
             {
-                strip: ["20mm Gold", "50mm Gold"],
-                pallet:  ["White", "Black"],
+                strip: ["Alu 30mm", "Gold 30mm", "Alu 50mm", "Gold 50mm", "Holz 30mm", "Holz 50mm", "Holz 100mm"],
+                pallet:  ["Gold", "Schwarz", "Rot", "Silber"],
             }
         )
     }
