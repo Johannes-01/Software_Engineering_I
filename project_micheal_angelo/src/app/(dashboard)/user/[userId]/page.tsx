@@ -35,7 +35,7 @@ export default function Page() {
         total: number,
         image: any
     ) => {
-        return total + image.image.price
+        return total + (image.image.price + (image.pallet ? 0.15 * image.image.price : 0)) / 100
     }, 0)
 
     return (
@@ -57,10 +57,9 @@ export default function Page() {
                 {images.map((image: any) => {
                     return <SelectionCard
                         key={image.id}
-                        image={image.image}
+                        image={image}
                         userId={userId}
                         deleteCard={setDeleteCard}
-                        configId={image.id}
                     />
                 })}
             </div>

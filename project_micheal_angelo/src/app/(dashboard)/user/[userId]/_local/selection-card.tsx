@@ -1,24 +1,24 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from "@components/ui/card";
 import { Button } from "@components/ui/button";
-import { Edit2, Trash } from "lucide-react";
+import { Trash } from "lucide-react";
 import { Item } from "@type/item";
 import Link from "next/link";
 
 interface GalleryCardProps {
-    image: Item;
+    image: { id: number, pallet: string, image: Item };
     userId: string | undefined;
     deleteCard: (imageId: number) => void;
-    configId: number
 }
 
 const GalleryCard: React.FC<GalleryCardProps> = ({
     image,
     userId,
     deleteCard,
-    configId,
 }) => {
     const [isHovered, setIsHovered] = useState<boolean>(false)
+
+    const price = (image.image.price + (image.pallet ? image.image.price * 0.15 : 0)) / 100
 
     return (
         <Card
@@ -34,7 +34,7 @@ const GalleryCard: React.FC<GalleryCardProps> = ({
                             <Button
                                 className="bg-red-500 hover:bg-red-600"
                                 onClick={() => {
-                                    deleteCard(configId)
+                                    deleteCard(image.id)
                                 }}
                             >
                                 <Trash className="text-white"/>
@@ -43,22 +43,22 @@ const GalleryCard: React.FC<GalleryCardProps> = ({
                     )}
 
                     <img
-                        src={image.image_path}
-                        alt={image.title}
+                        src={image.image.image_path}
+                        alt={image.image.title}
                         width={300}
                         height={400}
                         className="w-full h-48 object-cover mb-2 rounded"
                     />
 
-                    <h2 className="text-xl font-semibold">{image.title}</h2>
-                    <p className="text-gray-600">{image.notice}</p>
+                    <h2 className="text-xl font-semibold">{image.image.title}</h2>
+                    <p className="text-gray-600">{image.image.notice}</p>
                 </div>
 
                 <div className="flex justify-between items-center mt-2">
-                    <p className="text-lg font-semibold">${image.price.toFixed(2)}</p>
+                    <p className="text-lg font-semibold">${price.toFixed(2)}€</p>
                     {
                         userId
-                            ? <Link href={`/gallery/configure/${image.id}?userId=${userId}&configId=${configId}`}>
+                            ? <Link href={`/gallery/configure/${image.id}?userId=${userId}&configId=${image.id}`}>
                                 <Button>
                                     Editieren
                                 </Button>

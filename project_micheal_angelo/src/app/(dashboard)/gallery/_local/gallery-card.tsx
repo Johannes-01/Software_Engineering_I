@@ -61,7 +61,7 @@ const GalleryCard: React.FC<GalleryCardProps> = ({
                 </div>
 
                 <div className="flex justify-between items-center mt-2">
-                    <p className="text-lg font-semibold">${image.price.toFixed(2)}</p>
+                    <p className="text-lg font-semibold">${(image.price / 100).toFixed(2)}</p>
                     {
                         userId
                             ? <Link href={`/gallery/configure/${image.id}?userId=${userId}`}>

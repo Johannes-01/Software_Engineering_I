@@ -28,7 +28,7 @@ export const GET = handlerWithPreconditions<GetContext>(
         const {
             data,
             error
-        } = await supabaseClient.from("selection").select("id, image_id, is_recommendation, image(*)").eq("customer_id", userId)
+        } = await supabaseClient.from("selection").select("*, image(*)").eq("customer_id", userId)
 
         if (error) {
             console.log(`${route} ${error.message}`)
