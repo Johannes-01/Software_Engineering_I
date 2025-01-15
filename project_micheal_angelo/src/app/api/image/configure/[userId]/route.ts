@@ -20,7 +20,15 @@ const bodySchema = z.object({
 
 export const POST = handlerWithPreconditions<PostContext>(
     [requireUser, validateBody(bodySchema)],
-    async ({ supabaseClient, user, body }, _, { params }: { params: { userId: string }}) => {
+    async (
+        {
+            supabaseClient,
+            user,
+            body
+        },
+        _,
+        { params }: { params: { userId: string } }
+    ) => {
         if (user.id !== params.userId && user.user_metadata.role !== "admin") {
             return forbiddenError()
         }
@@ -33,6 +41,39 @@ export const POST = handlerWithPreconditions<PostContext>(
             customer_id: user.id,
             is_recommendation: user.user_metadata.role === "admin",
         })
+
+        return new NextResponse("Created", { status: 201 })
+    }
+)
+
+export const PUT = handlerWithPreconditions<PostContext>(
+    [requireUser, validateBody(bodySchema)],
+    async (
+        {
+            supabaseClient,
+            user,
+            body
+        },
+        request,
+        { params }: { params: Promise<{ userId: string }> }
+    ) => {
+        const userId = (await params).userId
+
+        if (user.id !== userId && user.user_metadata.role !== "admin") {
+            return forbiddenError()
+        }
+
+        const configId = request.nextUrl.searchParams.get("configId")
+
+        await supabaseClient
+            .from("selection")
+            .update({
+                strip: body.strip,
+                pallet: body.pallet,
+                passepartout: body.passepartout,
+                is_recommendation: user.user_metadata.role === "admin",
+            })
+            .eq("id", configId)
 
         return new NextResponse("Created", { status: 201 })
     }

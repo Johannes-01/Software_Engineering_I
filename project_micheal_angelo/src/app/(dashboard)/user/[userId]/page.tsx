@@ -60,6 +60,7 @@ export default function Page() {
                         image={image.image}
                         userId={userId}
                         deleteCard={setDeleteCard}
+                        configId={image.id}
                     />
                 })}
             </div>

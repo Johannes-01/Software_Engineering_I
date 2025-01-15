@@ -2,8 +2,6 @@ import { handlerWithPreconditions, MiddlewareContext, requireUser } from "@utils
 import { isAdmin } from "@utils/supabase-helper";
 import { badRequestError, forbiddenError, internalServerError } from "@utils/server-errors";
 import { NextResponse } from "next/server";
-import z from "zod"
-import { badRequest } from "next/dist/client/components/react-dev-overlay/server/shared";
 
 interface GetContext extends MiddlewareContext {
     supabaseClient: Exclude<MiddlewareContext["supabaseClient"], undefined>

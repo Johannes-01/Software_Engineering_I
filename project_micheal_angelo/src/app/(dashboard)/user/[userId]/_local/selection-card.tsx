@@ -9,12 +9,14 @@ interface GalleryCardProps {
     image: Item;
     userId: string | undefined;
     deleteCard: (imageId: number) => void;
+    configId: number
 }
 
 const GalleryCard: React.FC<GalleryCardProps> = ({
     image,
     userId,
     deleteCard,
+    configId,
 }) => {
     const [isHovered, setIsHovered] = useState<boolean>(false)
 
@@ -32,7 +34,7 @@ const GalleryCard: React.FC<GalleryCardProps> = ({
                             <Button
                                 className="bg-red-500 hover:bg-red-600"
                                 onClick={() => {
-                                    deleteCard(image.id)
+                                    deleteCard(configId)
                                 }}
                             >
                                 <Trash className="text-white"/>
@@ -56,13 +58,13 @@ const GalleryCard: React.FC<GalleryCardProps> = ({
                     <p className="text-lg font-semibold">${image.price.toFixed(2)}</p>
                     {
                         userId
-                            ? <Link href={`/gallery/configure/${image.id}?userId=${userId}`}>
+                            ? <Link href={`/gallery/configure/${image.id}?userId=${userId}&configId=${configId}`}>
                                 <Button>
-                                    Konfigurieren
+                                    Editieren
                                 </Button>
                             </Link>
                             : <Button disabled={true}>
-                                Konfigurieren
+                                Editieren
                             </Button>
                     }
                 </div>
