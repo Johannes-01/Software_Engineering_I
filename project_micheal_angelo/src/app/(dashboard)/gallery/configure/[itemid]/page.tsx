@@ -197,7 +197,7 @@ export default function ConfigureArtworkPage() {
                                         .then(() => router.back())
                                 })()
                             }}
-                        ><Heart/>Zur Auswahlmappe hinzufügen</Button>
+                        ><Heart/>{configId ? "Auswahl aktualisieren" : "Zur Auswahlmappe hinzufügen"}</Button>
                     </div>
                 </div>
             </div>
