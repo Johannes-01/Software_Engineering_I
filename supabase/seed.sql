@@ -110,3 +110,8 @@ values ('dark brown', 'gold 30cm', '5f2550bc-ba48-45d0-8e01-de7a2ca246c2', 1, fa
 insert into storage.buckets
     (id, name, created_at, updated_at, public, avif_autodetection, allowed_mime_types)
 values ('images', 'images', current_timestamp, current_timestamp, TRUE, FALSE, ARRAY['image/*']);
+
+CREATE POLICY "Enable insert for authenticated users only" ON "storage"."buckets"
+AS PERMISSIVE FOR INSERT
+TO authenticated
+WITH CHECK (true)

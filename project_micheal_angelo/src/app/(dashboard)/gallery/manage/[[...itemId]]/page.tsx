@@ -17,6 +17,7 @@ import {
 import { cn } from "@utils/tailwind-merge-styles";
 import { ItemRequest } from '@type/item'
 import { fromDoubleWithTwoDecimalInt } from '@utils/numberExtension'
+import { Category } from '@type/category';
 
 export default function ManageArtwork({ params }: { params: { itemId: string[] } }) {
     const imageId = params.itemId ? params.itemId[0] : undefined
@@ -79,10 +80,10 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
         }))
     }
 
-    const handleSelectCategory = (value: string) => {
+    const handleSelectCategory = (value: number) => {
         setFormData(prev => ({
             ...prev,
-            categoryId: categories.find((category: any) => category.name === value).id
+            category_id: categories.find((category: any) => category.id === value).id
         }))
     }
 
@@ -140,7 +141,7 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
         formData.append('file', file);
 
         formData.append('itemData', JSON.stringify({
-            category: item.category_id,
+            category_id: item.category_id,
             title: item.title,
             artist: item.artist,
             width: item.width.toString(),
@@ -151,6 +152,7 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
             notice: item.notice,
         }));
 
+        // differentiate between update and create
         const response = await fetch('/api/image', {
             method: 'POST',
             body: formData
@@ -167,7 +169,7 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
         return null
     }
 
-    const category = categories.find((category: any) => category.id === formData.category_id)
+    const category : Category = categories.find((category: Category) => category.id === formData.category_id)
 
     return (
         <div className="flex flex-col h-screen bg-background">
@@ -296,15 +298,14 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
                         <div>
                             <Label htmlFor="category_id">Kategorie</Label>
                             <Select
-                                onValueChange={(value: string) => handleSelectCategory(value)}
-                                value={category ? category.name : ""}
+                                onValueChange={(value: string) => handleSelectCategory(Number(value))}
                             >
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Select a category"/>
+                                    <SelectValue placeholder="Select a category" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {categories.map((category: any) => <SelectItem
-                                        value={category.name}
+                                    {categories.map((category: Category) => <SelectItem
+                                        value={category.id.toString()}
                                         key={category.id}
                                     >{category.name}</SelectItem>)}
                                 </SelectContent>
