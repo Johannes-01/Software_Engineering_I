@@ -61,8 +61,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
         return `/api/image?${params.toString()}`;
     };
 
-    console.log(selectedCategory)
-
     return (
         <div className={"w-full"}>
             <div className="flex gap-4 mb-2 w-full">
@@ -100,7 +98,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                     </Select>
                 </div>
 
-                <div className="w-1/20">
+                <div className="w-1/20 ml-auto">
                     <Button
                         className="w-full"
                         onClick={() => setImageQuery(buildImageQuery())}
@@ -134,7 +132,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                     )}
                 </div>
 
-                <Link href={"category/"}>
+                <Link href={"/category/"}>
                     <Button>
                         Add
                     </Button>
