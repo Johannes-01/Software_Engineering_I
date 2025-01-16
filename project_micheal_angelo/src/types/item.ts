@@ -1,7 +1,8 @@
-import { Category } from "./category";
+import { Category as string } from "./category";
 
 export interface Item {
-    category_id: Category;
+    id: number;
+    category_id: number;
     title: string;
     artist: string;
     width: number;
@@ -10,4 +11,17 @@ export interface Item {
     motive_height?: number;
     price: number;
     notice: string;
+    image_path: string;
+}
+
+export interface ItemRequest {
+    category_id: number;
+    title: string;
+    artist: string;
+    width: number;
+    height: number;
+    motive_width?: number;
+    motive_height?: number;
+    price: number;
+    notice: string;   
 }

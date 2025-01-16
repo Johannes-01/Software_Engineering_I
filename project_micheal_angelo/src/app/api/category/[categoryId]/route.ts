@@ -10,6 +10,20 @@ import { conflictError, internalServerError } from "@utils/server-errors";
 import { NextResponse } from 'next/server';
 import z from "zod"
 
+interface Slug {
+    params: { categoryId: string }
+}
+
+const categoryShouldExist = async (context: MiddlewareContext, _: unknown, { params }: Slug ) => requireExists(
+    "category",
+    { id: params.categoryId }
+)(context)
+
+const categoryNameShouldNotExist = async (context: MiddlewareContext) => requireUnique(
+    "category",
+    { name: context.body!.name }
+)(context)
+
 const putRequestSchema = z.object({
     name: z.string().min(1),
 })
@@ -23,8 +37,8 @@ export const PUT = handlerWithPreconditions<PutContext>(
     [
         requireAdmin,
         validateBody(putRequestSchema),
-        async (context, _, args) => requireExists("category", "id", args.params.categoryId)(context),
-        async (context) => requireUnique("category", "name", context.body!.name)(context),
+        categoryShouldExist,
+        categoryNameShouldNotExist
     ],
     async (
         {
@@ -60,7 +74,7 @@ interface DeleteContext extends MiddlewareContext {
 export const DELETE = handlerWithPreconditions<DeleteContext>(
     [
         requireAdmin,
-        async (context, _, { params }) => requireExists("category", "id", params.categoryId)(context),
+        categoryShouldExist,
     ],
     async (
         {

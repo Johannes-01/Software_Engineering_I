@@ -2,7 +2,7 @@ import {
     handlerWithPreconditions,
     MiddlewareContext,
     requireAdmin,
-    requireUnique,
+    requireUnique, requireUser,
     validateBody,
 } from "@utils/custom-middleware";
 import { internalServerError } from "@utils/server-errors";
@@ -14,7 +14,7 @@ interface GetContext extends MiddlewareContext {
 }
 
 export const GET = handlerWithPreconditions<GetContext>(
-    [requireAdmin],
+    [requireUser],
     async ({
         supabaseClient,
         route,
@@ -49,7 +49,7 @@ export const POST = handlerWithPreconditions<PostContext>(
     [
         requireAdmin,
         validateBody(postSchema),
-        async (context) => requireUnique("category", "name", context.body!.name)(context),
+        async (context) => requireUnique("category", { name: context.body!.name })(context),
     ],
     async ({
         supabaseClient,
