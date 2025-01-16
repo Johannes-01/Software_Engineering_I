@@ -24,12 +24,14 @@ export const POST = handlerWithPreconditions<PostContext>(
         {
             supabaseClient,
             user,
-            body
+            body,
+            route,
         },
         _,
         { params }: { params: { userId: string } }
     ) => {
         if (user.id !== params.userId && user.user_metadata.role !== "admin") {
+            console.error(`${route} | the logged in user cannot perform this action`)
             return forbiddenError()
         }
 
@@ -38,11 +40,14 @@ export const POST = handlerWithPreconditions<PostContext>(
             pallet: body.pallet,
             passepartout: body.passepartout,
             image_id: body.imageId,
-            customer_id: user.id,
+            customer_id: params.userId,
             is_recommendation: user.user_metadata.role === "admin",
         })
 
         return new NextResponse("Created", { status: 201 })
+    },
+    {
+        route: "/api/image/configure/:userId :POST"
     }
 )
 
@@ -76,5 +81,8 @@ export const PUT = handlerWithPreconditions<PostContext>(
             .eq("id", configId)
 
         return new NextResponse("Created", { status: 201 })
+    },
+    {
+        route: "/api/image/configure/:userId :PUT"
     }
 )

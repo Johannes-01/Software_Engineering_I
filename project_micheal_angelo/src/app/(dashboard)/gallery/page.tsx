@@ -54,6 +54,16 @@ export default function Gallery() {
 
     const totalPages = imageData ? Math.ceil(imageData.maxCount / ITEMS_PER_PAGE) : 0;
 
+    const userToAddTo = (() => {
+        if (!userInformation) {
+            return undefined
+        }
+
+        return userInformation.isAdmin
+            ? selectedUser?.id
+            : userInformation.userId
+    })()
+
     return (
         <div className="container mx-auto p-4">
             <h1 className="text-2xl font-bold mb-4">Gallery</h1>
@@ -73,9 +83,7 @@ export default function Gallery() {
                     <GalleryCard
                         key={image.id}
                         image={image}
-                        userId={(userInformation !== undefined && !userInformation.isAdmin)
-                            ? userInformation.userId
-                            : selectedUser?.id}
+                        userId={userToAddTo}
                         userIsAdmin={userInformation?.isAdmin}
                     />
                 ))}

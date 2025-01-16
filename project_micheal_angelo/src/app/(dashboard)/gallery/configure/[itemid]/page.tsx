@@ -188,7 +188,7 @@ export default function ConfigureArtworkPage() {
                                         body: JSON.stringify({
                                             strip: strip ?? null,
                                             pallet: pallet ?? null,
-                                            passepartout,
+                                            passepartout: passepartout ?? false,
                                             imageId: itemid
                                         })
                                     })
