@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from "@components/ui/card";
 import { Button } from "@components/ui/button";
+import { Badge } from "@components/ui/badge";
 import { Trash } from "lucide-react";
 import { Item } from "@type/item";
 import Link from "next/link";
 
 interface GalleryCardProps {
-    image: { id: number, pallet: string, image: Item };
+    image: { id: number, pallet: string, is_recommendation: boolean, image: Item };
     userId: string | undefined;
     deleteCard: (imageId: number) => void;
 }
@@ -50,7 +51,10 @@ const GalleryCard: React.FC<GalleryCardProps> = ({
                         className="w-full h-48 object-cover mb-2 rounded"
                     />
 
-                    <h2 className="text-xl font-semibold">{image.image.title}</h2>
+                    <h2 className="text-xl font-semibold flex gap-2 mb-1">
+                        {image.image.title}
+                        {image.is_recommendation && <Badge variant={"outline"}>Vorschlag</Badge>}
+                    </h2>
                     <p className="text-gray-600">{image.image.notice}</p>
                 </div>
 
