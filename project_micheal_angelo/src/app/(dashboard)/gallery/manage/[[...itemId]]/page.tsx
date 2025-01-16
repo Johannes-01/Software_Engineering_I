@@ -132,7 +132,10 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
         }
     }
 
-    async function uploadItemWithFile(item: ItemRequest, file: File) {
+    async function uploadItemWithFile(
+        item: ItemRequest,
+        file: File
+    ) {
         const formData = new FormData();
         formData.append('file', file);
 
@@ -172,7 +175,9 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
                 <div className="w-full md:w-1/2 flex flex-col">
                     <div
                         {...getRootProps()}
-                        className={`flex items-center justify-center w-full h-full border-2 border-dashed rounded-lg cursor-pointer ${isDragActive ? 'border-primary' : 'border-border'
+                        className={`flex items-center justify-center w-full h-full border-2 border-dashed rounded-lg cursor-pointer ${isDragActive
+                            ? 'border-primary'
+                            : 'border-border'
                         }`}
                     >
                         <input {...getInputProps()} />
@@ -194,7 +199,10 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
                     </div>
                 </div>
                 <div className="w-full md:w-1/2">
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    <form
+                        onSubmit={handleSubmit}
+                        className="space-y-4"
+                    >
                         <div>
                             <Label htmlFor="title">Titel</Label>
                             <Input
@@ -295,8 +303,10 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
                                     <SelectValue placeholder="Select a category"/>
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {categories.map((category: any) => <SelectItem value={category.name}
-                                                                                   key={category.id}>{category.name}</SelectItem>)}
+                                    {categories.map((category: any) => <SelectItem
+                                        value={category.name}
+                                        key={category.id}
+                                    >{category.name}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -323,7 +333,12 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
                                 </svg>
                             </div>
                         ) : (
-                            <Button type="submit" className="w-full">{imageId ? "Artwork aktualisieren" : "Artwork erstellen"}</Button>
+                            <Button
+                                type="submit"
+                                className="w-full"
+                            >
+                                {imageId ? "Artwork aktualisieren" : "Artwork erstellen"}
+                            </Button>
                         )}
                     </form>
                 </div>
