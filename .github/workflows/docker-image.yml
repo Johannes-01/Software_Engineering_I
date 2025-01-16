@@ -3,7 +3,6 @@ name: Build Docker Image
 on:
   workflow_run:
     workflows: ["Release to Production"]
-    branches: ["production"]
     types:
       - completed
     conclusion: success
