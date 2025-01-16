@@ -323,7 +323,7 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
                                 </svg>
                             </div>
                         ) : (
-                            <Button type="submit" className="w-full">Create Artwork</Button>
+                            <Button type="submit" className="w-full">{imageId ? "Artwork aktualisieren" : "Artwork erstellen"}</Button>
                         )}
                     </form>
                 </div>

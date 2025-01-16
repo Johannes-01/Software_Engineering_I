@@ -29,7 +29,7 @@ const GalleryCard: React.FC<GalleryCardProps> = ({
                 <div>
                     {(isHovered && userIsAdmin) && (
                         <div className="absolute top-2 right-2 flex gap-2">
-                            <Link href={`/gallery/edit/${image.id}`}>
+                            <Link href={`/gallery/manage/${image.id}`}>
                                 <Button
                                     variant="secondary"
                                 >
