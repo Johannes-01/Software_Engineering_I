@@ -62,7 +62,7 @@ const GalleryCard: React.FC<GalleryCardProps> = ({
                     <p className="text-lg font-semibold">${price.toFixed(2)}€</p>
                     {
                         userId
-                            ? <Link href={`/gallery/configure/${image.id}?userId=${userId}&configId=${image.id}`}>
+                            ? <Link href={`/gallery/configure/${image.image.id}?userId=${userId}&configId=${image.id}`}>
                                 <Button>
                                     Editieren
                                 </Button>
