@@ -30,6 +30,14 @@ export const GET = handlerWithPreconditions<GetContext>(
             return internalServerError()
         }
 
+        data.forEach((item) => {
+            const { data: x } = supabaseClient
+                .storage
+                .from('images')
+                .getPublicUrl((item.image as any).image_path);
+            (item.image as any).image_path = x.publicUrl;
+        });
+
         return NextResponse.json(data, { status: 200 })
     },
     {

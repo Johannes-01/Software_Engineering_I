@@ -2,181 +2,139 @@
 
 import React, { useState } from 'react';
 import useSWR from "swr";
-import { Topic } from "@type/topic";
-import Link from "next/link";
-import { Edit, Trash2, Plus } from "lucide-react"
+import { useParams } from "next/navigation";
+import TopicCard from "./_local/topic-card"
 import { createPortal } from "react-dom";
-import { Input } from "@components/ui/input"
+import {
+    AlertDialog, AlertDialogAction, AlertDialogCancel,
+    AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@components/ui/alert-dialog";
 import { Button } from "@components/ui/button";
-
-interface DialogMode {
-    mode: "edit" | "add" | "delete"
-    topic: Topic
-}
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle
+} from "@components/ui/dialog";
+import { Input } from "@components/ui/input";
+import { Plus } from "lucide-react"
+import { DialogBody } from "next/dist/client/components/react-dev-overlay/internal/components/Dialog";
 
 const TopicsPage: React.FC = () => {
+    const { topicId } = useParams()
     const {
-        data: topics,
-        error,
+        data: imagesInTopicFolder,
         mutate
-    } = useSWR<Topic[]>("/api/topic-folder", (url: string) => fetch(url).then(async (res) => await res.json()));
+    } = useSWR(`/api/topic-folder/${topicId}`, async (url: string) => {
+        return await (await fetch(url)).json()
+    })
 
-    const [cardHovered, setCardHovered] = useState<number | undefined>(undefined);
-    const [dialogMode, setDialogMode] = useState<DialogMode | undefined>(undefined)
+    const [cardToRemove, setCardToRemove] = useState<number | undefined>(undefined)
+    const [addImageDialogVisible, setAddImageDialogVisible] = useState<boolean>(false)
+    const [imageId, setImageId] = useState("")
 
-    if (!topics) {
+    if (!imagesInTopicFolder) {
         return null
     }
 
-    if (error) {
-        return <div>Error loading topics</div>;
-    }
-
     return (
-        <div>
-            <header className={"w-full flex flex-row justify-between p-8"}>
-                <h1 className={"font-bold text-4xl"}>Themenmappen</h1>
-                <Button
-                    onClick={() => setDialogMode({ mode: "add",
-                        topic: {
-                            name: "",
-                            id: -1
-                        }
-                    })}
-                >
-                    <Plus/> Themenmappe hinzufügen
+        <div className={"flex mx-auto p-4 flex-col"}>
+            <div className={"flex justify-between"}>
+                <h1 className={"text-2xl mb-4"}>Themenmappe</h1>
+                <Button onClick={() => setAddImageDialogVisible(true)}>
+                    <Plus /> Bild hinzufügen
                 </Button>
-            </header>
-            <div className={"grid grid-cols-3 gap-2 p-6"}>
-                {topics.map((topic) => {
-                    return (
-                        <Link
-                            href={`/topics/${topic.id}`}
-                            key={topic.id}
-                            className="relative w-full h-20 flex justify-start items-center border-2 border-gray-200 rounded-xl p-6"
-                            onMouseLeave={() => setCardHovered(undefined)}
-                            onMouseEnter={() => setCardHovered(topic.id)}
-                        >
-                            <h2>{topic.name}</h2>
-                            {cardHovered === topic.id && (
-                                <div className={"absolute right-1 top-2/5 flex flex-row gap-2 mr-4"}>
-                                    <button
-                                        className={"w-8 h-8 rounded"}
-                                        onClick={(e) => {
-                                            e.preventDefault()
-                                            setDialogMode({
-                                                mode: "edit",
-                                                topic
-                                            })
-                                        }}
-                                    >
-                                        <Edit/>
-                                    </button>
-                                    <button
-                                        className={"w-8 h-8 rounded"}
-                                        onClick={(e) => {
-                                            e.preventDefault()
-                                            setDialogMode({
-                                                mode: "delete",
-                                                topic
-                                            })
-                                        }}
-                                    >
-                                        <Trash2 color={"red"}/>
-                                    </button>
-                                </div>
-                            )}
-                        </Link>
-                    )
-                })}
             </div>
-            {(dialogMode?.mode === "edit" || dialogMode?.mode === "add") && createPortal(
-                <Dialog>
-                    {dialogMode.mode === "edit" ? "Bearbeiten" : "Hinzufügen"}
-                    <Input
-                        value={dialogMode.topic.name}
-                        onChange={(e) => {
-                            setDialogMode((pre) => ({
-                                ...pre,
-                                topic: {
-                                    ...dialogMode.topic,
-                                    name: e.target.value
-                                }
-                                // eslint-disable-next-line
-                            }) as any)
-                        }}
-                    />
-                    <div className={"flex flex-row gap-2 justify-end"}>
-                        <Button variant={"outline"} onClick={() => setDialogMode(undefined)}>Abbrechen</Button>
-                        {dialogMode.mode === "add" && <Button onClick={() => {
-                            if (dialogMode.mode === "add") {
-                                (async () => {
-                                    await fetch(
-                                        "/api/topic-folder",
-                                        {
-                                            method: "POST",
-                                            body: JSON.stringify({ name: dialogMode.topic.name })
-                                        }
-                                    )
-                                    mutate()
-                                })()
-                                setDialogMode(undefined)
-                            }
-                        }}>
-                            Hinzufügen
-                        </Button>}
-                        {dialogMode.mode === "edit" && <Button onClick={() => {
-                            (async () => {
-                                await fetch(
-                                    `/api/topic-folder/${dialogMode.topic.id}`,
-                                    {
-                                        method: "PUT",
-                                        body: JSON.stringify({ name: dialogMode.topic.name })
-                                    }
-                                )
-                                mutate()
-                                setDialogMode(undefined)
-                            })()
-                        }}>
-                            Speichern
-                        </Button>}
-                    </div>
-                </Dialog>,
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {
+                    imagesInTopicFolder.map((image: any) => {
+                        return (
+                            <TopicCard
+                                key={image.image.id}
+                                image={image.image}
+                                deleteCard={setCardToRemove}
+                            />
+                        )
+                    })
+                }
+            </div>
+            {createPortal(
+                <AlertDialog open={!!cardToRemove}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Wirklich löschen?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Möchtest du das Bild wirklich aus der Auswahl mappe löschen?
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel onClick={() => setCardToRemove(undefined)}>Abbrechen</AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={() => {
+                                    fetch(`/api/topic-folder/${topicId}/${cardToRemove}`, {
+                                        method: "DELETE"
+                                    })
+                                        .finally(() => {
+                                            setCardToRemove(undefined)
+                                            void mutate()
+                                        })
+                                }}
+                            >Löschen</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>,
                 document.body
             )}
-            {(dialogMode?.mode === "delete") && createPortal(
-                <Dialog>
-                    <h2 className={"text-xl"}>Wirklich löschen?</h2>
-                    <p className={"text-gray-600"}>Löschen einer Kategorie kann nicht rückgängig gemacht werden</p>
-                    <div className={"flex flex-row gap-2 justify-end"}>
-                        <Button variant={"outline"} onClick={() => setDialogMode(undefined)}>Abbrechen</Button>
-                        <Button
-                            onClick={() => {
-                                (async () => {
-                                    await fetch(`/api/topic-folder/${dialogMode.topic.id}`, { method: "DELETE" })
-                                    mutate()
-                                    setDialogMode(undefined)
-                                })()
-                            }}
-                        >Löschen</Button>
-                    </div>
+            {createPortal(
+                <Dialog open={addImageDialogVisible}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Bild hinzufügen</DialogTitle>
+                            <DialogDescription>
+                                Welches Bild soll hinzugefügt werden?
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogBody>
+                            <Input
+                                value={imageId}
+                                onChange={(e) => {
+                                    setImageId(e.target.value)
+                                }}
+                            ></Input>
+                        </DialogBody>
+                        <DialogFooter className={"flex justify-end gap-2"}>
+                            <Button
+                                variant={"secondary"}
+                                onClick={() => {
+                                    setAddImageDialogVisible(false)
+                                }}
+                            >Abbrechen</Button>
+                            <Button
+                                onClick={() => {
+                                    fetch(`/api/topic-folder/${topicId}`, {
+                                        method: "POST",
+                                        body: JSON.stringify({ imageId })
+                                    })
+                                        .then(() => {
+                                            setImageId("")
+                                            setAddImageDialogVisible(false)
+                                            void mutate()
+                                        })
+                                }}
+                            >
+                                Hinzufügen
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
                 </Dialog>,
                 document.body
             )}
         </div>
     );
 };
-
-const Dialog: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    return (
-        <div className={"bg-black bg-opacity-40 w-full h-full absolute top-0 left-0"}>
-            <dialog
-                className={"flex absolute top-1/3 left-1/3 w-1/3 h-50 bg-white flex-col gap-4 border-2 border-gray-200 p-4 rounded-xl  m-0"}>
-                {children}
-            </dialog>
-        </div>
-    )
-}
-
 
 export default TopicsPage;

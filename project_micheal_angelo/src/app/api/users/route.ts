@@ -1,9 +1,9 @@
 'use server';
 
+import { handlerWithPreconditions, MiddlewareContext, requireAdmin } from "@utils/custom-middleware";
+import { getAllUsers } from "../../../services/get-all-users";
 import { NextResponse } from "next/server";
-import { handlerWithPreconditions, requireAdmin, MiddlewareContext } from "@utils/custom-middleware";
 import { internalServerError } from "@utils/server-errors";
-import { createSupabaseAdminClient } from "@utils/supabase-helper";
 
 interface GetContext extends MiddlewareContext {
     supabaseClient: Exclude<MiddlewareContext["supabaseClient"], undefined>
@@ -12,23 +12,12 @@ interface GetContext extends MiddlewareContext {
 export const GET = handlerWithPreconditions<GetContext>(
     [requireAdmin],
     async () => {
-        const { data: { users }, error } = await (await createSupabaseAdminClient()).auth.admin.listUsers()
+        const data = await getAllUsers()
 
-        if (error) {
-            console.error("Error while fetching users", error)
-            internalServerError()
+        if (data === undefined) {
+            return internalServerError()
         }
 
-        return NextResponse.json(
-            users
-                .filter(user => user.user_metadata.role !== "admin")
-                .map(user => ({
-                    id: user.id,
-                    email: user.email
-                })),
-            {
-                status: 200,
-            }
-        )
+        return NextResponse.json(data)
     }
 )

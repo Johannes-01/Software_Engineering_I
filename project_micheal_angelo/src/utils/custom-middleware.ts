@@ -101,7 +101,7 @@ export function validateBody(schema: z.ZodObject<any>) {
         const { error } = schema.safeParse(context.body)
 
         if (error) {
-            console.error(`${context.route} | route called with invalid body`)
+            console.error(`${context.route} | ${error.message}`)
             return badRequestError(JSON.parse(error.message))
         }
 
