@@ -108,12 +108,17 @@ const SearchBar: React.FC<SearchBarProps> = ({
                 </div>
             </div>
 
-            {userIsAdmin && <div className="w-full flex justify-between">
+            {userIsAdmin && <div
+                className="w-full flex justify-between"
+                data-testid={"admin-controls"}
+            >
                 <div className="w-3/20">
                     {users && (
-                        <Select onValueChange={(value: string) => {
-                            setSelectedUser(users.find((user) => user.id ===  value))
-                        }}>
+                        <Select
+                            onValueChange={(value: string) => {
+                                setSelectedUser(users.find((user) => user.id === value))
+                            }}
+                        >
                             <SelectTrigger className="w-full">
                                 <SelectValue placeholder="No User"/>
                             </SelectTrigger>
