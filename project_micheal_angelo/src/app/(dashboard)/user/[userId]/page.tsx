@@ -14,6 +14,7 @@ import {
     DialogTitle,
 } from "@components/ui/dialog";
 import { toast } from "sonner"
+import { calculatePrice } from "@utils/pricing";
 
 export default function Page() {
     const { userId } = useParams<{ userId: string }>();
@@ -27,7 +28,7 @@ export default function Page() {
         return await (await fetch(url)).json()
     })
 
-    if (!images) {
+    if (!images || !Array.isArray(images)) {
         return null;
     }
 
@@ -35,7 +36,7 @@ export default function Page() {
         total: number,
         image: any
     ) => {
-        return total + (image.image.price + (image.pallet ? 0.15 * image.image.price : 0)) / 100
+        return total + calculatePrice(image)
     }, 0)
 
     return (
