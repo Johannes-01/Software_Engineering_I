@@ -16,11 +16,12 @@ import {
 } from "@components/ui/select"
 import { cn } from "@utils/tailwind-merge-styles";
 import { ItemRequest } from '@type/item'
-import { fromDoubleWithTwoDecimalInt, toDoubleWithTwoDecimalPlaces } from '@utils/numberExtension'
 import { Category } from '@type/category';
+import { useRouter } from "next/navigation";
 
 export default function ManageArtwork({ params }: { params: { itemId: string[] } }) {
     const imageId = params.itemId ? params.itemId[0] : undefined
+    const router = useRouter()
 
     const [file, setFile] = useState<File | string | undefined>(undefined);
     const [formData, setFormData] = useState<ItemRequest>({
@@ -29,6 +30,8 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
         artist: '',
         width: 0,
         height: 0,
+        motive_height: 0,
+        motive_width: 0,
         price: 0,
         category_id: 0,
     });
@@ -43,8 +46,10 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
             title: response.title,
             notice: response.notice,
             artist: response.artist,
-            width: response.width, /*toDoubleWithTwoDecimalPlaces(response.width),*/
-            height: response.height, /*toDoubleWithTwoDecimalPlaces(response.height),*/
+            width: response.width,
+            height: response.height,
+            motive_height: response.motive_height,
+            motive_width: response.motive_width,
             price: response.price,
             category_id: response.category_id,
         })
@@ -97,15 +102,7 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
         setError("");
         setLoading(true);
 
-        /*formData.price = fromDoubleWithTwoDecimalInt(formData.price);
-        formData.height = fromDoubleWithTwoDecimalInt(formData.height);
-        formData.width = fromDoubleWithTwoDecimalInt(formData.width);*/
-
-        // todo do we need to have both? --> simon?
-        formData.motive_height = formData.height;
-        formData.motive_width = formData.width;
-        
-        try 
+        try
         {
             if(!imageId)
                 {
@@ -113,51 +110,28 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
                         setError("Please upload an artwork");
                         return;
                     }
-            
+
                     uploadItemWithFile(formData, file as File).then(() => {
-                        setLoading(false);
-                    });    
+                        router.push("/gallery")
+                    });
                 }
-                else 
+                else
                 {
                     if(file instanceof File){
                         updateItemWithFile(formData, file).then(() => {
-                            setLoading(false);
+                            router.push("/gallery")
                         })
                     }
-        
+
                     if(typeof file === 'string'){
                         updateItem(formData).then(() => {
-                            setLoading(false);
+                            router.push("/gallery")
                         })
                     }
                 }
         } catch (error) {
             setLoading(false);
             setError("Something went wrong. Please try again.")
-        }
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async function uploadItem(item: ItemRequest) {
-        const payload = {
-            ...item,
-            // Exclude the File from the JSON payload
-            image: undefined
-        }
-
-        const response = await fetch('/api/image', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        })
-
-        if (response.ok) {
-            console.log('Success:', response.json());
-        } else {
-            setError('Failed to upload artwork. Please try again.');
         }
     }
 
@@ -200,8 +174,8 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
             width: item.width.toString(),
             height: item.height.toString(),
             price: item.price.toString(),
-            motive_width: item.motive_width!.toString(),
-            motive_height: item.motive_width!.toString(),
+            motive_width: item.motive_width.toString(),
+            motive_height: item.motive_width.toString(),
             notice: item.notice,
             image_path: ImageStoragePath
         });
@@ -324,30 +298,6 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
                         </div>
                         <div className="flex gap-4">
                             <div className="w-1/2">
-                                <Label htmlFor="width">Innere Breite</Label>
-                                <Input
-                                    id="width"
-                                    name="width"
-                                    type="number"
-                                    value={formData.width}
-                                    onChange={handleInputChange}
-                                    required
-                                />
-                            </div>
-                            <div className="w-1/2">
-                                <Label htmlFor="height">Innere Höhe</Label>
-                                <Input
-                                    id="height"
-                                    name="height"
-                                    type="number"
-                                    value={formData.height}
-                                    onChange={handleInputChange}
-                                    required
-                                />
-                            </div>
-                        </div>
-                        <div className="flex gap-4">
-                            <div className="w-1/2">
                                 <Label htmlFor="width">Äußere Breite</Label>
                                 <Input
                                     id="width"
@@ -365,6 +315,30 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
                                     name="height"
                                     type="number"
                                     value={formData.height}
+                                    onChange={handleInputChange}
+                                    required
+                                />
+                            </div>
+                        </div>
+                        <div className="flex gap-4">
+                            <div className="w-1/2">
+                                <Label htmlFor="width">Motiv Breite</Label>
+                                <Input
+                                    id="motive_width"
+                                    name="motive_width"
+                                    type="number"
+                                    value={formData.motive_width}
+                                    onChange={handleInputChange}
+                                    required
+                                />
+                            </div>
+                            <div className="w-1/2">
+                                <Label htmlFor="height">Motiv Höhe</Label>
+                                <Input
+                                    id="motive_height"
+                                    name="motive_height"
+                                    type="number"
+                                    value={formData.motive_height}
                                     onChange={handleInputChange}
                                     required
                                 />
@@ -390,7 +364,7 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
                                     <SelectValue placeholder="Select a category" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {categories.map((category: Category) => 
+                                    {categories.map((category: Category) =>
                                     <SelectItem
                                         value={category.id.toString()}
                                         key={category.id}

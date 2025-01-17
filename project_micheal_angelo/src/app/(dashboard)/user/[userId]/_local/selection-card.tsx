@@ -20,6 +20,8 @@ const GalleryCard: React.FC<GalleryCardProps> = ({
 }) => {
     const [isHovered, setIsHovered] = useState<boolean>(false)
 
+    console.log(image)
+
     return (
         <Card
             className="relative"
