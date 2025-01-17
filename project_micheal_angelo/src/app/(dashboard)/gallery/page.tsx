@@ -53,7 +53,7 @@ export default function Gallery() {
 
     const [deleteArtwork, setDeleteArtwork] = React.useState<number | undefined>(undefined)
 
-    const { data: userInformation } = useSWRImmutable<UserInformation>("api/get-user-information", fetcher);
+    const { data: userInformation } = useSWR<UserInformation>("api/get-user-information", fetcher);
     const { data: users } = useSWRImmutable<User[]>("api/users", fetcher);
 
     const { data: imageData, mutate } = useSWR<ImageResponse>(
