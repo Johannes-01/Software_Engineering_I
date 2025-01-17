@@ -16,7 +16,7 @@ import {
 } from "@components/ui/select"
 import { cn } from "@utils/tailwind-merge-styles";
 import { ItemRequest } from '@type/item'
-import { fromDoubleWithTwoDecimalInt } from '@utils/numberExtension'
+import { fromDoubleWithTwoDecimalInt, toDoubleWithTwoDecimalPlaces } from '@utils/numberExtension'
 import { Category } from '@type/category';
 
 export default function ManageArtwork({ params }: { params: { itemId: string[] } }) {
@@ -39,13 +39,12 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
 
     useSWR(imageId !== undefined ? `/api/image/${imageId}` : null, async (url: string) => {
         const response = await (await fetch(url)).json()
-
         setFormData({
             title: response.title,
             notice: response.notice,
             artist: response.artist,
-            width: response.width,
-            height: response.height,
+            width: response.width, /*toDoubleWithTwoDecimalPlaces(response.width),*/
+            height: response.height, /*toDoubleWithTwoDecimalPlaces(response.height),*/
             price: response.price,
             category_id: response.category_id,
         })
@@ -89,7 +88,7 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
     const handleSelectCategory = (value: number) => {
         setFormData(prev => ({
             ...prev,
-            category_id: categories.find((category: any) => category.id === value).id
+            category_id: value
         }))
     }
 
@@ -97,18 +96,19 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
         e.preventDefault();
         setError("");
         setLoading(true);
+
+        /*formData.price = fromDoubleWithTwoDecimalInt(formData.price);
+        formData.height = fromDoubleWithTwoDecimalInt(formData.height);
+        formData.width = fromDoubleWithTwoDecimalInt(formData.width);*/
+
+        // todo do we need to have both? --> simon?
+        formData.motive_height = formData.height;
+        formData.motive_width = formData.width;
+        
         try 
         {
             if(!imageId)
                 {
-                    formData.price = fromDoubleWithTwoDecimalInt(formData.price);
-                    formData.height = fromDoubleWithTwoDecimalInt(formData.height);
-                    formData.width = fromDoubleWithTwoDecimalInt(formData.width);
-            
-                    // todo do we need to have both? --> simon?
-                    formData.motive_height = formData.height;
-                    formData.motive_width = formData.width;
-        
                     if (!file) {
                         setError("Please upload an artwork");
                         return;
@@ -120,9 +120,6 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
                 }
                 else 
                 {
-                    formData.motive_height = formData.height;
-                    formData.motive_width = formData.width;
-        
                     if(file instanceof File){
                         updateItemWithFile(formData, file).then(() => {
                             setLoading(false);
@@ -388,15 +385,18 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
                             <Label htmlFor="category_id">Kategorie</Label>
                             <Select
                                 onValueChange={(value: string) => handleSelectCategory(Number(value))}
-                            >
+                                >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select a category" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {categories.map((category: Category) => <SelectItem
+                                    {categories.map((category: Category) => 
+                                    <SelectItem
                                         value={category.id.toString()}
                                         key={category.id}
-                                    >{category.name}</SelectItem>)}
+                                    >
+                                        {category.name}
+                                    </SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>
