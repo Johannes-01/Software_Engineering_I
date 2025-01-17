@@ -5,6 +5,7 @@ import { Badge } from "@components/ui/badge";
 import { Trash } from "lucide-react";
 import { Item } from "@type/item";
 import Link from "next/link";
+import { calculatePrice } from "@utils/pricing";
 
 interface GalleryCardProps {
     image: { id: number, pallet: string, is_recommendation: boolean, image: Item };
@@ -18,8 +19,6 @@ const GalleryCard: React.FC<GalleryCardProps> = ({
     deleteCard,
 }) => {
     const [isHovered, setIsHovered] = useState<boolean>(false)
-
-    const price = (image.image.price + (image.pallet ? image.image.price * 0.15 : 0)) / 100
 
     return (
         <Card
@@ -59,7 +58,7 @@ const GalleryCard: React.FC<GalleryCardProps> = ({
                 </div>
 
                 <div className="flex justify-between items-center mt-2">
-                    <p className="text-lg font-semibold">${price.toFixed(2)}€</p>
+                    <p className="text-lg font-semibold">${calculatePrice(image).toFixed(2)}€</p>
                     {
                         userId
                             ? <Link href={`/gallery/configure/${image.image.id}?userId=${userId}&configId=${image.id}`}>
