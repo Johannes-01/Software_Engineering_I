@@ -88,7 +88,7 @@ export const PUT = handlerWithPreconditions<PutContext>(
             : { motive_width: itemData.motive_height }),
           ...(itemData.price === undefined ? {} : { price: itemData.price }),
           ...(itemData.notice === undefined ? {} : { notice: itemData.notice }),
-          image_path: newImagePath,
+          ...(file === undefined ? {} : { image_path: newImagePath }),
         })
         .eq("id", params.id)
         .select();
