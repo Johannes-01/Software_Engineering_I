@@ -9,12 +9,14 @@ interface GalleryCardProps {
     image: Item;
     userId: string | undefined;
     userIsAdmin?: boolean;
+    deleteAction: (value: number) => void;
 }
 
 const GalleryCard: React.FC<GalleryCardProps> = ({
     image,
     userId,
     userIsAdmin,
+    deleteAction,
 }) => {
     const [isHovered, setIsHovered] = useState<boolean>(false)
 
@@ -39,8 +41,7 @@ const GalleryCard: React.FC<GalleryCardProps> = ({
                             <Button
                                 className="bg-red-500 hover:bg-red-600"
                                 onClick={() => {
-                                    // Handle delete action
-                                    // e.g., deleteImage(image.id);
+                                    deleteAction(image.id)
                                 }}
                             >
                                 <Trash className="text-white"/>

@@ -11,6 +11,14 @@ import GalleryCard from "./_local/gallery-card";
 
 import { Item } from "@type/item";
 import { Category } from '@type/category';
+import { createPortal } from "react-dom";
+import {
+    AlertDialog, AlertDialogAction, AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription, AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle
+} from "@components/ui/alert-dialog";
 
 interface UserInformation {
     isAdmin: boolean;
@@ -43,10 +51,12 @@ export default function Gallery() {
     const [selectedUser, setSelectedUser] = React.useState<User | undefined>(undefined);
     const [currentPage, setCurrentPage] = React.useState(0);
 
+    const [deleteArtwork, setDeleteArtwork] = React.useState<number | undefined>(undefined)
+
     const { data: userInformation } = useSWRImmutable<UserInformation>("api/get-user-information", fetcher);
     const { data: users } = useSWRImmutable<User[]>("api/users", fetcher);
 
-    const { data: imageData } = useSWR<ImageResponse>(
+    const { data: imageData, mutate } = useSWR<ImageResponse>(
         imageQuery,
         fetcher,
         { keepPreviousData: true }
@@ -85,6 +95,7 @@ export default function Gallery() {
                         image={image}
                         userId={userToAddTo}
                         userIsAdmin={userInformation?.isAdmin}
+                        deleteAction={setDeleteArtwork}
                     />
                 ))}
             </div>
@@ -94,6 +105,32 @@ export default function Gallery() {
                 totalPages={totalPages}
                 onPageChange={setCurrentPage}
             />
+
+            {createPortal(
+                <AlertDialog open={!!deleteArtwork}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Wirklich löschen?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Löschen kann nicht rückgängig gemacht werden.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel onClick={() => setDeleteArtwork(undefined)}>Abbrechen</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => {
+                                fetch(`/api/image/${deleteArtwork}`, {
+                                    method: "DELETE"
+                                })
+                                    .finally(() => {
+                                        setDeleteArtwork(undefined)
+                                        void mutate()
+                                    })
+                            }}>Löschen</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>,
+                document.body,
+            )}
         </div>
     );
 }
