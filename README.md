@@ -41,9 +41,9 @@ Commits on production deploy the production enviromnet. You should only merge pr
 ## Contribution Guide
 
 ### Commit Messages
-A commit should have the following format {type} - [{ticket_id}] {message}.
+A commit should have the following format {type}(#{ticket_id}) {message}.
 
-    git commit -m "fix - [backlog#123] adjust files for task XYZ"
+    git commit -m "fix(#123) adjust files for task XYZ"
 
 |Type|Description|
 |------|-------------|
