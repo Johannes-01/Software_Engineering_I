@@ -23,6 +23,18 @@ export const GET = handlerWithPreconditions<GetContext>(
             ? Number(searchParams.get("c"))
             : undefined
 
+        const { data: selectedOriginals } = await supabaseClient
+            .from("selection")
+            .select("image_id, image (category_id)")
+            .eq("image.category_id", 1)
+
+        if (!selectedOriginals) {
+            console.error("failed to get selectedOriginals")
+            return internalServerError()
+        }
+
+        const selectedOriginalIds = selectedOriginals.map((record) => record.image_id)
+
         let supabaseQuery = supabaseClient
             .from("image")
             .select("*", { count: "exact" })
@@ -39,10 +51,12 @@ export const GET = handlerWithPreconditions<GetContext>(
             supabaseQuery = supabaseQuery.eq("category_id", category)
         }
 
+        supabaseQuery.or(`category_id.not.eq.1,and(category_id.eq.1,id.not.in.(${selectedOriginalIds.join(",")}))`)
+
         const { data, error, count } = paginationIndex !== 0
             ? await supabaseQuery.range(paginationIndex, paginationIndex + 10)
             : await supabaseQuery;
- 
+
         if (error) {
             console.error(`${route} | select -> `, error.message)
             return internalServerError()

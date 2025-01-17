@@ -20,8 +20,8 @@ export interface ItemRequest {
     artist: string;
     width: number;
     height: number;
-    motive_width?: number;
-    motive_height?: number;
+    motive_width: number;
+    motive_height: number;
     price: number;
     notice: string;   
 }
