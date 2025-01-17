@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import useSWR from "swr/immutable";
 import { useDropzone } from 'react-dropzone'
 import { Upload } from 'lucide-react'
@@ -16,7 +16,8 @@ import {
 } from "@components/ui/select"
 import { cn } from "@utils/tailwind-merge-styles";
 import { ItemRequest } from '@type/item'
-import { fromDoubleWithTwoDecimalInt } from '@utils/numberExtension'
+import { fromDoubleWithTwoDecimalInt, toDoubleWithTwoDecimalPlaces } from '@utils/numberExtension'
+import { Category } from '@type/category';
 
 export default function ManageArtwork({ params }: { params: { itemId: string[] } }) {
     const imageId = params.itemId ? params.itemId[0] : undefined
@@ -31,27 +32,32 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
         price: 0,
         category_id: 0,
     });
-
+    const [ImageStoragePath, setImageStoragePath] = useState<string | undefined>();
     const { data: categories } = useSWR("/api/category", async (url: string) => {
         return await (await fetch(url)).json()
     })
 
     useSWR(imageId !== undefined ? `/api/image/${imageId}` : null, async (url: string) => {
         const response = await (await fetch(url)).json()
-
         setFormData({
             title: response.title,
             notice: response.notice,
             artist: response.artist,
-            width: response.width,
-            height: response.height,
+            width: response.width, /*toDoubleWithTwoDecimalPlaces(response.width),*/
+            height: response.height, /*toDoubleWithTwoDecimalPlaces(response.height),*/
             price: response.price,
             category_id: response.category_id,
         })
         setFile(response.image_path)
     })
 
-    // const [artistsOpen, setArtistsOpen] = useState(false);
+    useEffect(() => {
+        if (typeof file === 'string') {
+            const imageStoragePath = file.substring(file.lastIndexOf('/') + 1);
+            setImageStoragePath(imageStoragePath);
+        }
+    }, [file]);
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | undefined>(undefined);
 
@@ -79,10 +85,10 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
         }))
     }
 
-    const handleSelectCategory = (value: string) => {
+    const handleSelectCategory = (value: number) => {
         setFormData(prev => ({
             ...prev,
-            categoryId: categories.find((category: any) => category.name === value).id
+            category_id: value
         }))
     }
 
@@ -91,22 +97,45 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
         setError("");
         setLoading(true);
 
-        formData.price = fromDoubleWithTwoDecimalInt(formData.price);
+        /*formData.price = fromDoubleWithTwoDecimalInt(formData.price);
         formData.height = fromDoubleWithTwoDecimalInt(formData.height);
-        formData.width = fromDoubleWithTwoDecimalInt(formData.width);
+        formData.width = fromDoubleWithTwoDecimalInt(formData.width);*/
 
         // todo do we need to have both? --> simon?
         formData.motive_height = formData.height;
         formData.motive_width = formData.width;
-
-        if (!file) {
-            setError("Please upload an artwork");
-            return;
-        }
-
-        uploadItemWithFile(formData, file as File).then(() => {
+        
+        try 
+        {
+            if(!imageId)
+                {
+                    if (!file) {
+                        setError("Please upload an artwork");
+                        return;
+                    }
+            
+                    uploadItemWithFile(formData, file as File).then(() => {
+                        setLoading(false);
+                    });    
+                }
+                else 
+                {
+                    if(file instanceof File){
+                        updateItemWithFile(formData, file).then(() => {
+                            setLoading(false);
+                        })
+                    }
+        
+                    if(typeof file === 'string'){
+                        updateItem(formData).then(() => {
+                            setLoading(false);
+                        })
+                    }
+                }
+        } catch (error) {
             setLoading(false);
-        });
+            setError("Something went wrong. Please try again.")
+        }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -140,7 +169,7 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
         formData.append('file', file);
 
         formData.append('itemData', JSON.stringify({
-            category: item.category_id,
+            category_id: item.category_id,
             title: item.title,
             artist: item.artist,
             width: item.width.toString(),
@@ -163,11 +192,70 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
         }
     }
 
+    async function updateItem(item: ItemRequest) {
+        const payload =  JSON.stringify({
+            category_id: item.category_id,
+            title: item.title,
+            artist: item.artist,
+            width: item.width.toString(),
+            height: item.height.toString(),
+            price: item.price.toString(),
+            motive_width: item.motive_width!.toString(),
+            motive_height: item.motive_width!.toString(),
+            notice: item.notice,
+            image_path: ImageStoragePath
+        });
+
+        const response = await fetch(`/api/image/${imageId}`, {
+            method: 'PUT',
+            body: JSON.stringify(payload),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            console.log('Success:', response.json());
+        } else {
+            setError('Failed to update artwork. Please try again.');
+        }
+    }
+
+    async function updateItemWithFile(
+        item: ItemRequest,
+        file: File
+    ) {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        formData.append('itemData', JSON.stringify({
+            category_id: item.category_id,
+            title: item.title,
+            artist: item.artist,
+            width: item.width.toString(),
+            height: item.height.toString(),
+            price: item.price.toString(),
+            motive_width: item.motive_width!.toString(),
+            motive_height: item.motive_width!.toString(),
+            notice: item.notice,
+            image_path: ImageStoragePath
+        }));
+
+        const response = await fetch(`/api/image/${imageId}`, {
+            method: 'PUT',
+            body: formData
+        });
+
+        if (response.ok) {
+            console.log('Success:', response.json());
+        } else {
+            setError('Failed to update artwork. Please try again.');
+        }
+    }
+
     if (!categories) {
         return null
     }
-
-    const category = categories.find((category: any) => category.id === formData.category_id)
 
     return (
         <div className="flex flex-col h-screen bg-background">
@@ -296,17 +384,19 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
                         <div>
                             <Label htmlFor="category_id">Kategorie</Label>
                             <Select
-                                onValueChange={(value: string) => handleSelectCategory(value)}
-                                value={category ? category.name : ""}
-                            >
+                                onValueChange={(value: string) => handleSelectCategory(Number(value))}
+                                >
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Select a category"/>
+                                    <SelectValue placeholder="Select a category" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {categories.map((category: any) => <SelectItem
-                                        value={category.name}
+                                    {categories.map((category: Category) => 
+                                    <SelectItem
+                                        value={category.id.toString()}
                                         key={category.id}
-                                    >{category.name}</SelectItem>)}
+                                    >
+                                        {category.name}
+                                    </SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>

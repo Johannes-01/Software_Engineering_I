@@ -137,7 +137,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                     )}
                 </div>
 
-                <Link href={"/category/"}>
+                <Link href={"/gallery/manage"}>
                     <Button>
                         Add
                     </Button>
