@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import useSWR from "swr/immutable";
 import { useDropzone } from 'react-dropzone'
 import { Upload } from 'lucide-react'
@@ -32,7 +32,7 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
         price: 0,
         category_id: 0,
     });
-
+    const [ImageStoragePath, setImageStoragePath] = useState<string | undefined>();
     const { data: categories } = useSWR("/api/category", async (url: string) => {
         return await (await fetch(url)).json()
     })
@@ -52,7 +52,13 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
         setFile(response.image_path)
     })
 
-    // const [artistsOpen, setArtistsOpen] = useState(false);
+    useEffect(() => {
+        if (typeof file === 'string') {
+            const imageStoragePath = file.substring(file.lastIndexOf('/') + 1);
+            setImageStoragePath(imageStoragePath);
+        }
+    }, [file]);
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | undefined>(undefined);
 
@@ -91,23 +97,48 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
         e.preventDefault();
         setError("");
         setLoading(true);
-
-        formData.price = fromDoubleWithTwoDecimalInt(formData.price);
-        formData.height = fromDoubleWithTwoDecimalInt(formData.height);
-        formData.width = fromDoubleWithTwoDecimalInt(formData.width);
-
-        // todo do we need to have both? --> simon?
-        formData.motive_height = formData.height;
-        formData.motive_width = formData.width;
-
-        if (!file) {
-            setError("Please upload an artwork");
-            return;
-        }
-
-        uploadItemWithFile(formData, file as File).then(() => {
+        try 
+        {
+            if(!imageId)
+                {
+                    formData.price = fromDoubleWithTwoDecimalInt(formData.price);
+                    formData.height = fromDoubleWithTwoDecimalInt(formData.height);
+                    formData.width = fromDoubleWithTwoDecimalInt(formData.width);
+            
+                    // todo do we need to have both? --> simon?
+                    formData.motive_height = formData.height;
+                    formData.motive_width = formData.width;
+        
+                    if (!file) {
+                        setError("Please upload an artwork");
+                        return;
+                    }
+            
+                    uploadItemWithFile(formData, file as File).then(() => {
+                        setLoading(false);
+                    });    
+                }
+                else 
+                {
+                    formData.motive_height = formData.height;
+                    formData.motive_width = formData.width;
+        
+                    if(file instanceof File){
+                        updateItemWithFile(formData, file).then(() => {
+                            setLoading(false);
+                        })
+                    }
+        
+                    if(typeof file === 'string'){
+                        updateItem(formData).then(() => {
+                            setLoading(false);
+                        })
+                    }
+                }
+        } catch (error) {
             setLoading(false);
-        });
+            setError("Something went wrong. Please try again.")
+        }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -152,7 +183,6 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
             notice: item.notice,
         }));
 
-        // differentiate between update and create
         const response = await fetch('/api/image', {
             method: 'POST',
             body: formData
@@ -165,11 +195,70 @@ export default function ManageArtwork({ params }: { params: { itemId: string[] }
         }
     }
 
+    async function updateItem(item: ItemRequest) {
+        const payload =  JSON.stringify({
+            category_id: item.category_id,
+            title: item.title,
+            artist: item.artist,
+            width: item.width.toString(),
+            height: item.height.toString(),
+            price: item.price.toString(),
+            motive_width: item.motive_width!.toString(),
+            motive_height: item.motive_width!.toString(),
+            notice: item.notice,
+            image_path: ImageStoragePath
+        });
+
+        const response = await fetch(`/api/image/${imageId}`, {
+            method: 'PUT',
+            body: JSON.stringify(payload),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            console.log('Success:', response.json());
+        } else {
+            setError('Failed to update artwork. Please try again.');
+        }
+    }
+
+    async function updateItemWithFile(
+        item: ItemRequest,
+        file: File
+    ) {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        formData.append('itemData', JSON.stringify({
+            category_id: item.category_id,
+            title: item.title,
+            artist: item.artist,
+            width: item.width.toString(),
+            height: item.height.toString(),
+            price: item.price.toString(),
+            motive_width: item.motive_width!.toString(),
+            motive_height: item.motive_width!.toString(),
+            notice: item.notice,
+            image_path: ImageStoragePath
+        }));
+
+        const response = await fetch(`/api/image/${imageId}`, {
+            method: 'PUT',
+            body: formData
+        });
+
+        if (response.ok) {
+            console.log('Success:', response.json());
+        } else {
+            setError('Failed to update artwork. Please try again.');
+        }
+    }
+
     if (!categories) {
         return null
     }
-
-    const category : Category = categories.find((category: Category) => category.id === formData.category_id)
 
     return (
         <div className="flex flex-col h-screen bg-background">

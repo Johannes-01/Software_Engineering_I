@@ -2,29 +2,16 @@
 
 import { NextResponse } from 'next/server';
 import { createSupabaseClient } from '@utils/supabase-helper'
-import { ItemRequest } from '@type/item';
+import { Item } from '@type/item';
 import { handlerWithPreconditions, MiddlewareContext, requireAdmin, requireExists, validateBody } from '@utils/custom-middleware';
-import { z } from 'zod';
 import { internalServerError } from '@utils/server-errors';
 
 interface PutContext extends MiddlewareContext {
     supabaseClient: Exclude<MiddlewareContext["supabaseClient"], undefined>,
-    body: ItemRequest
+    body: any
 }
 
 type Slug = { params: { id: string } };
-
-const putBody = z.object({
-    category_id: z.number(),
-    title: z.string(),
-    artist: z.string(),
-    width: z.number(),
-    height: z.number(),
-    motive_width: z.number(),
-    motive_height: z.number(),
-    price: z.number(),
-    notice: z.string(),
-})
 
 const imageShouldExist = async (context: MiddlewareContext, _: unknown, { params }: Slug) => requireExists(
     "image",
@@ -34,20 +21,89 @@ const imageShouldExist = async (context: MiddlewareContext, _: unknown, { params
 export const PUT = handlerWithPreconditions<PutContext>(
     [
         requireAdmin,
-        validateBody(putBody),
         imageShouldExist,
     ],
-    async ({ supabaseClient, body, route }, _, { params }: Slug) => {
-        const { error } = await supabaseClient
+    async ({ supabaseClient, route }, request, { params }: Slug) => {
+        let file: File | undefined;
+        let itemData: Item | undefined;
+                
+        if (request.headers.get("content-type")?.includes("multipart/form-data")) {
+            try {
+                const formData = await request.formData();
+                file = formData.get("file") as File | undefined;
+                const formDataItemData = formData.get("itemData") ?? "";
+                const formDataString = formDataItemData.toString();
+                itemData = JSON.parse(formDataString) as Item | undefined;
+            } catch (error) {
+                return new NextResponse(
+                    `Error while deserializing item and file: ${error}`,
+                    {
+                        status: 400,
+                    }
+                );
+            }
+        } else if (request.headers.get("content-type")?.includes("application/json")) {
+            try {
+                itemData = (await request.json()) as Item;
+            } catch (error) {
+                return new NextResponse(`Error while deserializing item: ${error}`, {
+                    status: 400,
+                });
+            }
+        } else {
+            return NextResponse.json(
+                {
+                    error:
+                        "Invalid request type. Must be 'multipart/form-data' or 'application/json'",
+                },
+                { status: 400 }
+            );
+        }
+
+        console.log(itemData);
+        console.log(file?.name ?? "");
+        console.log(params.id);
+        
+        if(itemData) {
+            const { error } = await supabaseClient
             .from("image")
             .update({
-                ...(body.artist === undefined ? {} : { artist: body.artist }),
+                ...(itemData.category_id === undefined ? {} : { category_id: itemData.category_id }),
+                ...(itemData.title === undefined ? {} : { title : itemData.title }),
+                ...(itemData.artist === undefined ? {} : { artist: itemData.artist }),
+                ...(itemData.width === undefined ? {} : { width: itemData.width }),
+                ...(itemData.height === undefined ? {} : { height: itemData.height }),
+                ...(itemData.motive_width === undefined ? {} : { motive_width: itemData.motive_width }),
+                ...(itemData.motive_height === undefined ? {} : { motive_width: itemData.motive_height }),
+                ...(itemData.price === undefined ? {} : { price: itemData.price }),
+                ...(itemData.notice === undefined ? {} : { notice: itemData.notice }),
             })
-            .eq("id", params.id)
+            .eq("id", params.id);
 
-        if (error) {
-            console.error(`${route} -> ${error.message}`)
-            return internalServerError()
+            if (error) {
+                console.error(`${route} -> ${error.message}`)
+                return internalServerError()
+            }
+
+            console.log((await supabaseClient.from("image").select("*").eq("id", params.id)).data); 
+        }
+
+        if(file && itemData?.image_path) {
+            const arrayBuffer = await file.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);            
+
+            const { error } = await supabaseClient.storage
+            .from('images')
+           .update(itemData.image_path, buffer, {
+                cacheControl: '3600',
+                upsert: true,
+                contentType: file.type
+            })
+
+            if (error) {
+                console.error(`${route} -> ${error.message}`)
+                return internalServerError()
+            }
         }
 
         return new NextResponse("Updated", { status: 200 })
